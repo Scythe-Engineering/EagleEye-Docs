@@ -1,0 +1,31 @@
+.features {
+  padding: 2rem 0 3rem 0;
+}
+
+.featureCard {
+  background: #161b25;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.featureTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f9c84a;
+}
+
+.featureBody {
+  color: #cdd4e0;
+}
+
+.featureLink {
+  margin-top: auto;
+  color: #f9c84a;
+  font-weight: 600;
+}
