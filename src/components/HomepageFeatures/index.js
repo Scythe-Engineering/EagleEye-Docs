@@ -8,13 +8,13 @@ const FeatureList = [
     title: 'Pipeline-first',
     description:
       'Understand how frames flow through definitions and secondary ops, with quick links to config and debugging notes.',
-    link: {label: 'Pipelines', to: '/docs/codebase/pipelines'},
+    link: {label: 'Pipelines', to: '/docs/codebase/pipelines/overview'},
   },
   {
     title: 'Device-aware',
     description:
       'CPU, GPU, and MX3 paths are covered, plus guidance on extending the compute pool for new hardware.',
-    link: {label: 'Device Management', to: '/docs/codebase/device-management'},
+    link: {label: 'Device Management', to: '/docs/codebase/device-management/overview'},
   },
   {
     title: 'Operator-friendly',

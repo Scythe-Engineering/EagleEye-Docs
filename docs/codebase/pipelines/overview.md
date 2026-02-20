@@ -1,37 +1,51 @@
 # Pipelines Overview
 
-Pipelines are frame-processing chains defined in JSON and assembled at runtime. They resolve operations, wire compute devices, and run per-camera.
+A pipeline is a directed acyclic graph (DAG) of processing operations, run per-camera frame. Pipelines are defined in `src/config/pipeline_config.json` and assembled at startup by `generate_all_pipelines()`.
 
-## Core files
-- `src/config/utils/pipeline.py`: `Pipeline` class; loads modules, injects dependencies, runs steps, optional timing.
-- `src/config/utils/generate_all_pipelines.py`: builds pipelines for each camera defined in `pipeline_config.json`.
-- `src/config/pipeline_config.json`: declarative list of operations per camera.
+## DAG model
 
-## Resolution order
-1. Try `src/main_operations/definitions/{action_name}.py` (class `CamelCaseDefinition`).
-2. Fallback `src/secondary_operations/{action_name}.py` (class `CamelCase`).
+Operations are **nodes**; connections between them are **directed edges**. Each node has named input and output **ports**. An edge carries data from one node's output port to another node's input port.
+
+Two connection types exist:
+- **Normal connections** (`is_default: false`) — carry the **current frame's** output from the upstream node.
+- **Temporal connections** (`is_default: true`) — carry the **previous frame's** output. Used for feedback loops, e.g. passing the last known pose back into a preprocessing step.
+
+Every operation node has a stable `uuid` (e.g. `op-mljk5q36-arwb`) that persists across pipeline editor saves and is used as the key in `FlowManager.operation_outputs`.
+
+## Operation resolution
+
+When a pipeline is built, each `action_name` is resolved in this order:
+
+1. `src/main_operations/definitions/<name>` — class named `<CamelCase>Definition`
+2. `src/secondary_operations/<name>` — class named `<CamelCase>` (no `Definition` suffix)
+
+The `.py` extension is stripped before the class name is derived, so `detect_apriltags.py` maps to `DetectApriltags` in secondary ops or `DetectApriltags` in main ops.
 
 ## Dependency injection
-Constructors that include `compute_pool` or `web_interface` receive them automatically. Other parameters must be provided in `action_params`.
 
-## Run loop (simplified)
-```python
-from src.config.utils.generate_all_pipelines import generate_all_pipelines
-from src.webui.web_server import EagleEyeInterface
-from src.utils.device_management_utils.compute_pool import ComputePool
+These parameters are automatically passed to any operation constructor that declares them by name — **do not include them in `action_params`**:
 
-web_interface = EagleEyeInterface()
-compute_pool = ComputePool()
-pipelines = generate_all_pipelines(web_interface, compute_pool)
+| Parameter | Type |
+|---|---|
+| `web_interface` | `EagleEyeInterface` |
+| `compute_pool` | `ComputePool` |
+| `network_table` | `NetworkTable` |
+| `camera_manager` | `CameraThreadManager` |
+| `camera_config_registry` | `CameraConfigRegistry` |
+| `logger` | `Logger` |
 
-# Camera thread
-frame = ...  # np.ndarray
-pipelines["CAM0"].run(frame)
-```
+## Execution scheduling
+
+`FlowManager` computes the execution schedule at initialization time via a topological sort (forward pass) and a backward pass for finish timesteps. At runtime, operations are dispatched in timestep groups. If the schedule requires parallel execution, multiple `ThreadObject` workers run concurrently. Single-branch pipelines run on one thread with no synchronization overhead.
+
+See [Flow Manager](./flow-manager) for details.
+
+## Profiling
+
+Every frame, `FlowManager` records a profiling snapshot with per-operation and per-timestep wall-clock runtimes. These snapshots are published to the frontend via the SSE `pipeline_profile` event every 300 ms and displayed in the Pipeline Editor.
 
 ## Debugging
-- Set `debug_mode = True` in `pipeline.py` to print per-op timings and FPS.
-- Import errors: confirm module name matches `action_name` and is present in main/secondary paths.
 
-
-
+- Set `debug_mode = True` in `src/config/utils/pipeline.py` to enable verbose per-op timing to stdout.
+- Pipeline errors are published via SSE `pipeline_error` events and shown as red indicators in the Pipeline Editor.
+- Check backend logs for `ImportError` (wrong class name) or `ValueError` (no thread available) during pipeline construction.

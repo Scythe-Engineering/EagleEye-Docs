@@ -1,51 +1,124 @@
-# Main Operation Definitions
+# Operation Definitions
 
-Main operations live in `src/main_operations/definitions/` as thin wrappers that resolve compute devices and delegate heavy logic to modules under `src/modules/`.
+All operation classes — both main and secondary — must extend `OperationInstance` from `src/main_operations/definitions/base/base_class.py`.
 
-## Pattern
-- File: `src/main_operations/definitions/{name}.py`
-- Class: `CamelCaseDefinition` (e.g., `ApriltagCnnPreprocessorDefinition`)
-- Responsibilities: parse params, fetch devices, instantiate implementation, expose `run`
+## Base class
 
 ```python
-# src/main_operations/definitions/my_op.py
-from src.modules.my_op.implementation import MyOpImplementation
-from src.utils.device_management_utils.compute_pool import ComputePool
+from src.main_operations.definitions.base.base_class import OperationInstance
 
-class MyOpDefinition:
-    def __init__(self, model_path: str, device_id: str, compute_pool: ComputePool, threshold: float = 0.1):
-        device = compute_pool.get_compute_device(device_id)
-        self.delegate = MyOpImplementation(model_path, device, threshold)
+class MyOperation(OperationInstance):
+    def __init__(self, my_param: str) -> None:
+        self.my_param = my_param
 
-    def run(self, frame):
-        return self.delegate.run(frame)
+    def run(self, input_data):
+        # Process input_data and return output for the next node
+        return input_data
 ```
 
-## Config definitions
-Describe parameters in JSON for validation and UI metadata:
-- Path: `src/main_operations/definitions/config_data/{name}_config_def.json`
-- Keys: `class_name`, `description`, `category` (`prep`, `det`, `proc`, `filt`, `net`), `parameters`
+`run()` is the only required method. The signature should accept whatever the upstream node emits. Return `None` to skip the current frame downstream.
+
+## Optional methods
+
+### `update_config(json_config: dict)`
+
+Called by the WebUI when a user edits operation parameters live (without a full restart). Only operations with a config definition that has editable parameters receive this call.
+
+```python
+def update_config(self, json_config: dict) -> None:
+    for key, value in json_config.items():
+        if hasattr(self, key):
+            setattr(self, key, value)
+```
+
+### `visualize() -> np.ndarray | None`
+
+Called by the visualization system when the user clicks **Visualize** on an operation node in the Pipeline Editor. Should return a BGR `np.ndarray` suitable for MJPEG streaming. Return `None` to indicate nothing to show.
+
+```python
+def visualize(self) -> np.ndarray | None:
+    return self._last_annotated_frame
+```
+
+## Main operations
+
+Main operations live in `src/main_operations/definitions/` and typically wrap heavier module code under `src/modules/`.
+
+- **File:** `src/main_operations/definitions/<name>.py`
+- **Class:** `<CamelCase>Definition` (e.g. `ApriltagCnnPreprocessorDefinition`)
+- **Pattern:** Parse params → fetch device from `ComputePool` → instantiate implementation
+
+```python
+from src.modules.my_model.implementation import MyModelImpl
+from src.utils.device_management_utils.compute_pool import ComputePool
+from src.main_operations.definitions.base.base_class import OperationInstance
+
+class MyModelDefinition(OperationInstance):
+    def __init__(self, model_path: str, device_id: str, compute_pool: ComputePool) -> None:
+        device = compute_pool.get_compute_device(device_id)
+        self.impl = MyModelImpl(model_path, device)
+
+    def run(self, frame):
+        return self.impl.run(frame)
+```
+
+## Config definition JSON
+
+Every operation that appears in the Pipeline Editor must have a matching config definition file describing its parameters. This file is used to render the parameter form in the editor and for validation.
+
+- **Main ops:** `src/main_operations/definitions/config_data/<name>_config_def.json`
+- **Secondary ops:** `src/secondary_operations/config_data/<name>_config_def.json`
 
 ```json
 {
-  "class_name": "ApriltagCnnPreprocessorDefinition",
-  "description": "Preprocesses frames before AprilTag detection",
-  "category": "prep",
+  "class_name": "MyModelDefinition",
+  "description": "Runs MyModel inference on a frame",
+  "category": "det",
+  "input_nodes": [
+    {"name": "frame", "has_default": false}
+  ],
+  "output_nodes": ["detections"],
   "parameters": {
-    "model_path": {"type": "str", "description": "Weights path", "required": true},
-    "device_id": {"type": "str", "description": "Compute device id", "required": true},
-    "conf_threshold": {"type": "float", "description": "Confidence threshold", "default": 0.15}
+    "model_path": {
+      "type": "str",
+      "description": "Path to ONNX weights",
+      "required": true
+    },
+    "device_id": {
+      "type": "str",
+      "description": "Compute device ID (e.g. CPU, GPU_0, MX3_0)",
+      "required": true
+    },
+    "conf_threshold": {
+      "type": "float",
+      "description": "Detection confidence threshold",
+      "default": 0.15,
+      "min": 0.0,
+      "max": 1.0
+    }
   }
 }
 ```
 
-## Contract
-- Implement `run(self, input)`; document expected input/output in the class docstring.
-- Optional `back_propagate_input(self, input_data)` to accept feedback from BackPropagate ops.
+### Category values
 
-## When to create a main op
-- Operation requires device allocation, models, or complex orchestration.
-- Logic is substantial enough to live under `src/modules/{name}/`.
+| Category | Meaning |
+|---|---|
+| `prep` | Preprocessing / image transforms |
+| `det` | Detection (AprilTags, objects) |
+| `proc` | General processing |
+| `filt` | Filtering / outlier rejection |
+| `net` | NetworkTables output |
 
+### Input/output nodes
 
+`input_nodes` and `output_nodes` define the port names that appear as connection anchors in the Pipeline Editor. Each input node can optionally accept temporal connections (`has_default: true`).
 
+## Secondary operations
+
+Secondary operations live directly in `src/secondary_operations/` as a single file (no module subdirectory).
+
+- **File:** `src/secondary_operations/<name>.py`
+- **Class:** `<CamelCase>` (no `Definition` suffix)
+
+See [Secondary Operations](./secondary-operations) for the full list and examples.

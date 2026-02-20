@@ -64,7 +64,8 @@ const config = {
       image: "img/docusaurus-social-card.jpg",
       colorMode: {
         defaultMode: "dark",
-        respectPrefersColorScheme: true,
+        disableSwitch: true,
+        respectPrefersColorScheme: false,
       },
       navbar: {
         title: "EagleEye Vision",
@@ -75,13 +76,13 @@ const config = {
         items: [
           {
             type: "docSidebar",
-            sidebarId: "docs",
+            sidebarId: "userGuide",
             position: "left",
             label: "User Guide",
           },
           {
-            type: "doc",
-            docId: "codebase/overview",
+            type: "docSidebar",
+            sidebarId: "codebaseDocs",
             position: "left",
             label: "Codebase Docs",
           },

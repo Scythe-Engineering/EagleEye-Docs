@@ -1,36 +1,80 @@
 # WebUI Frontend
 
-Client-side code lives under `src/webui/js/`, with templates in `src/webui/html/` and styles in `src/webui/css/`. Three.js powers 3D visuals; Tailwind-style utilities are used in CSS.
+The frontend is a Vite-bundled ES6 application with Handlebars HTML templating and Tailwind CSS v4. All source lives under `src/webui/`.
 
-## Structure (partial)
+## Build pipeline
+
+```bash
+cd src/webui
+npm install          # installs Vite, Handlebars plugin, Tailwind, CodeMirror, Three.js, etc.
+npm run build        # produces js/main.js and style.css
+```
+
+The Vite config uses `vite-plugin-handlebars` to compile `.hbs` partials into the final HTML, and `@tailwindcss/vite` for Tailwind v4. The rolldown bundler (Vite's Rust-based bundler) is used for faster production builds.
+
+## Directory layout
+
 ```
 src/webui/
-├── index.html
+├── index.hbs                  # Root Handlebars template
+├── partials/                  # HBS partials (one per tab)
+│   ├── views.hbs              # Camera feeds tab
+│   ├── three-view.hbs         # 3D visualization tab
+│   ├── pipeline-editor.hbs    # DAG pipeline editor tab
+│   ├── system.hbs             # System resource monitor tab
+│   ├── settings.hbs           # Settings/NT address tab
+│   ├── utils.hbs              # Camera calibration tab
+│   └── custom-ops.hbs         # Custom operations editor tab
 ├── js/
-│   ├── main.js          # entry point
-│   ├── init3DView.js    # Three.js setup
-│   ├── pipeline/        # pipeline editor logic
-│   ├── settings/        # settings UI
-│   ├── ui/              # shared UI components
-│   ├── feeds/           # camera feed handling
-│   └── dropdown/        # dropdown helpers
-├── css/                 # component styles (sidebar, camera, terminal)
-├── assets/              # robots, fields, apriltags, images
+│   ├── main.js                # Vite entry point
+│   ├── init3DView.js          # Three.js field + robot setup
+│   ├── pipeline/              # Pipeline editor (DAG drag/drop)
+│   ├── settings/              # Settings UI
+│   ├── feeds/                 # Camera MJPEG feed management
+│   ├── ui/                    # Shared UI components (notifications, sidebar)
+│   └── dropdown/              # Dropdown component
+├── css/
+│   ├── sidebar.css            # Sidebar and tab navigation styles
+│   ├── camera.css             # Camera feed card styles
+│   └── terminal.css           # Log terminal styles
+├── assets/
+│   ├── no_image.png           # Placeholder for unavailable feeds
+│   ├── favicon.ico
+│   ├── apriltags/             # Tag ID reference PNGs
+│   └── robots/                # 3D robot model files (GLTF/Draco)
 └── web_server_utils/
+    ├── serve_static_files.py  # Flask static helpers
+    └── drako_loader/          # Draco decompressor JS assets
 ```
 
-## Behaviors
-- Pipeline editor: drag/reorder operations; saves automatically and shows restart state.
-- Camera feeds: renders MJPEG streams; supports multiple cameras.
-- 3D view: robot + field visualization via Three.js.
-- Notifications: backend state warnings animate to draw attention.
+## Key JS modules
 
-## Styling cues
-- Dark theme with gold accent (`#f9c84a`) to match the frontend palette.
-- Scrollbars and notification animations customized in CSS (`sidebar.css`, `camera.css`, `terminal.css`).
+| Module | Role |
+|---|---|
+| `main.js` | Entry; initializes SSE connection, tab routing, all sub-modules |
+| `init3DView.js` | Three.js scene: FRC field mesh, robot model, pose updates from SSE |
+| `pipeline/` | DAG editor: node rendering, drag, port connections, config panel, profiling overlay |
+| `feeds/` | MJPEG `<img>` management per camera; falls back to no-image placeholder |
+| `settings/` | NetworkTables address form, restart button, restart-required banner |
+| `ui/` | Toast notifications, sidebar state, log terminal |
 
-## Build
-- Some features require a frontend build step (`npm run build`) before serving from Flask.
+## Third-party libraries
 
+| Library | Use |
+|---|---|
+| [Three.js](https://threejs.org/) | 3D field and robot visualization |
+| [CodeMirror 6](https://codemirror.net/) | In-browser Python editor (Custom Ops tab) |
+| Tailwind CSS v4 | Utility-first styling |
+| Handlebars | HTML templating (compiled at build time) |
 
+## SSE integration
 
+`main.js` opens an `EventSource` to `/sse/stream` and dispatches named events to the relevant modules:
+
+```js
+const es = new EventSource('/sse/stream');
+es.addEventListener('system_status', e => systemModule.update(JSON.parse(e.data)));
+es.addEventListener('pipeline_error', e => pipelineModule.showError(JSON.parse(e.data)));
+es.addEventListener('pipeline_profile', e => pipelineModule.updateProfiling(JSON.parse(e.data)));
+es.addEventListener('log_update', e => terminal.append(JSON.parse(e.data)));
+```

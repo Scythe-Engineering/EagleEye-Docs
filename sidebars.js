@@ -15,7 +15,7 @@
  @type {import('@docusaurus/plugin-content-docs').SidebarsConfig}
  */
 const sidebars = {
-  docs: [
+  userGuide: [
     {
       type: 'category',
       label: 'User Guide',
@@ -24,14 +24,30 @@ const sidebars = {
         'user-guide/setup',
         'user-guide/configuration',
         'user-guide/running',
+        'user-guide/webui-usage',
+        'user-guide/camera-setup',
+        'user-guide/deployment',
         'user-guide/troubleshooting',
       ],
     },
+  ],
+
+  codebaseDocs: [
     {
       type: 'category',
       label: 'Codebase Docs',
       link: {type: 'doc', id: 'codebase/overview'},
       items: [
+        {
+          type: 'category',
+          label: 'Architecture',
+          link: {type: 'doc', id: 'codebase/architecture/overview'},
+          items: [
+            'codebase/architecture/startup-sequence',
+            'codebase/architecture/camera-system',
+            'codebase/architecture/sse-realtime',
+          ],
+        },
         {
           type: 'category',
           label: 'Pipelines',
@@ -40,6 +56,7 @@ const sidebars = {
             'codebase/pipelines/configuration',
             'codebase/pipelines/operation-definitions',
             'codebase/pipelines/secondary-operations',
+            'codebase/pipelines/flow-manager',
             'codebase/pipelines/add-operation',
           ],
         },
@@ -62,6 +79,27 @@ const sidebars = {
             'codebase/webui/api',
           ],
         },
+        {
+          type: 'category',
+          label: 'Extension Points',
+          link: {type: 'doc', id: 'codebase/extension-points/overview'},
+          items: [
+            'codebase/extension-points/new-operation',
+            'codebase/extension-points/new-device',
+            'codebase/extension-points/rust-modules',
+            'codebase/extension-points/new-ui-tab',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Data Systems',
+          link: {type: 'doc', id: 'codebase/data-systems/overview'},
+          items: [
+            'codebase/data-systems/flatpack-schema',
+            'codebase/data-systems/networktables',
+          ],
+        },
+        'codebase/testing',
       ],
     },
   ],
