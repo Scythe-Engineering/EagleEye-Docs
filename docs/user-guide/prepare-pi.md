@@ -46,6 +46,13 @@ instead.
 
 **Expected result:** you get a shell prompt on the Pi.
 
+:::tip No easy access to Wi-Fi?
+Connect the Pi by Ethernet to the robot radio or network, then connect your laptop to that
+same network and SSH to the Pi's assigned address. From there, follow
+[Connect to Wi-Fi from a Robot Network](./connect-wifi) to join an internet-connected Wi-Fi
+network or phone hotspot before updating the system and installing EagleEye.
+:::
+
 ## 3. Update the system
 
 ```bash

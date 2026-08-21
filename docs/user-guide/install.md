@@ -6,6 +6,9 @@ title: Install EagleEye
 # Install EagleEye
 
 Run this on the Pi you prepared in [Prepare the Raspberry Pi](./prepare-pi), over SSH.
+The Pi must have internet access. A robot network normally does not provide it; if you used
+Ethernet for the first connection, [connect the Pi to Wi-Fi or a hotspot](./connect-wifi)
+before continuing.
 
 ## 1. Run the installer
 
