@@ -64,30 +64,14 @@ Wait for the reboot, then SSH back in.
 
 **Expected result:** `sudo apt update` reports no pending upgrades on a second run.
 
-## 4. Install camera name support
+## 4. Keep camera connections consistent
 
-EagleEye reads USB camera names and port numbers with `v4l2-ctl`. Without it, cameras may
-show up with blank names and the bus IDs you rely on later can be harder to identify.
+The EagleEye installer installs the Linux camera-discovery tools automatically. You normally
+identify cameras by name in the Web UI rather than looking up bus IDs yourself.
 
-```bash
-sudo apt install -y v4l-utils
-```
-
-Check it works with a camera plugged in:
-
-```bash
-v4l2-ctl --list-devices
-```
-
-**Expected result:** each camera is listed with a name line such as
-`HD USB Camera: usb-0000:01:00.0-1.3:` followed by one or more `/dev/videoN` paths. The
-trailing part of that USB token is what EagleEye turns into the camera's **bus ID**.
-
-## 5. Decide where the cameras plug in
-
-EagleEye derives each camera's bus ID from the physical USB port, so the same port gives the
-same bus ID across reboots — but only if you keep the cameras in the same ports. Label the
-ports now and keep the wiring fixed.
+EagleEye still tracks a camera by its physical USB path. Label each camera cable and keep it
+in the same Pi USB port after setup so its saved calibration and pipeline settings continue
+to match.
 
 Next: [Install EagleEye](./install).
 

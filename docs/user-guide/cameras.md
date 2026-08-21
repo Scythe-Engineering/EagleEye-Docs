@@ -6,18 +6,17 @@ title: Check Your Cameras
 # Check Your Cameras
 
 EagleEye finds USB cameras automatically at startup. There is no "add camera" button — you
-plug the camera in, restart the backend, and it appears. What you do on this page is confirm
-each camera is detected and write down its **bus ID**, which you will type into every node
-and settings panel that follows.
+plug the camera in, restart the backend, and it appears. Confirm that every camera is
+detected and label its cable and USB port before continuing.
 
 ## How cameras are identified
 
-Each camera gets a bus ID derived from the USB port it is plugged into, read from
-`v4l2-ctl`. Because it comes from the physical port and not from enumeration order, the same
-port gives the same bus ID after a reboot — as long as you do not move the cable.
+The Web UI normally identifies each camera by its displayed name. Internally, EagleEye ties
+its settings to the camera's physical USB path so they remain stable across reboots. Keep
+each camera in the same USB port after calibration and pipeline setup.
 
-If you move a camera to a different port, its bus ID changes and every node configured with
-the old ID stops working.
+Moving a camera to another port changes that internal path, so its saved settings may no
+longer match.
 
 ## 1. Plug in the cameras, then restart the backend
 
@@ -41,30 +40,16 @@ the camera name. If you see the "no cameras" message, nothing was detected.
 Views shows the raw camera stream, not pipeline output. It is meant for aiming the cameras
 and for driver assistance.
 
-## 3. Read the bus IDs
+## 3. Match each camera to its physical port
 
-Open the **Utils** tab and open the **Camera** dropdown at the top. It lists every camera
-EagleEye knows about, and the small line under the dropdown shows the selected camera's
-details.
+Open the **Utils** tab and use the **Camera** dropdown at the top. It lists every camera
+EagleEye knows about. Select each camera and confirm which physical camera it represents,
+then label that camera's cable and Pi USB port.
 
 ![Utils tab camera selector](/img/ui-screenshots/utils-tab.png)
 
-Write down the bus ID for each camera along with which port it is in and where it is mounted
-on the robot. For example:
-
-| Camera | USB port | Bus ID | Mounted |
-|--------|----------|--------|---------|
-| Front AprilTag cam | top-left | `1.3` | front, facing forward |
-| Rear AprilTag cam | top-right | `1.4` | back, facing backward |
-
-You can cross-check on the Pi:
-
-```bash
-v4l2-ctl --list-devices
-```
-
-The bus ID comes from the trailing part of the USB token in the device name line, for example
-`... usb-0000:01:00.0-1.3:` gives `1.3`.
+You should not need to inspect Linux device paths or look up bus IDs manually during normal
+setup. When an operation asks for a camera, use the camera identifier shown by the Web UI.
 
 ## 4. Aim and focus
 
@@ -81,10 +66,10 @@ With the live view open, point each camera where it needs to look and check:
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| No cards in Views | Camera not detected at startup | Restart the backend after plugging in; check `v4l2-ctl --list-devices` |
+| No cards in Views | Camera not detected at startup | Restart the backend after plugging it in; try another port or cable |
 | Card present, black image | Camera opened but delivering no frames | Try a different USB port; some cameras need a powered hub |
-| Camera name is blank | `v4l-utils` not installed | `sudo apt install -y v4l-utils`, then restart the backend |
-| Bus ID changed after a reboot | Camera moved to another port | Put it back, or update the bus ID in every node and in Utils |
+| Camera name is blank | Camera discovery failed during startup | Restart the backend and check the System Logs |
+| Camera settings no longer match | Camera moved to another USB port | Put it back in its labelled port, or update that camera's settings |
 | Two identical cameras confused | Same model, different ports | Cover one lens and watch which Views card goes dark |
 
 Next: [Calibrate intrinsics](./calibrate-intrinsics).

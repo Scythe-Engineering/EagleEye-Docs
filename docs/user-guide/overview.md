@@ -24,7 +24,7 @@ terminal and SSH. You do not need to read the EagleEye source code.
 1. [Prepare the Raspberry Pi](./prepare-pi) — flash Raspberry Pi OS Lite, enable SSH, update.
 2. [Install EagleEye](./install) — one command, then a service that starts on boot.
 3. [Open the UI](./open-the-ui) — port 5001, first-run checks.
-4. [Check your cameras](./cameras) — confirm each camera is detected and note its bus ID.
+4. [Check your cameras](./cameras) — confirm each camera is detected and label its USB port.
 5. [Calibrate intrinsics](./calibrate-intrinsics) — built-in ChArUco calibration in the Utils tab.
 6. [Configure extrinsics](./configure-extrinsics) — where the camera sits on the robot.
 7. [Connect NetworkTables](./networktables) — point EagleEye at the roboRIO.
