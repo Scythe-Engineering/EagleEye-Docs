@@ -9,7 +9,7 @@ Use this checklist when adding a new processing operation to EagleEye.
 | **Secondary operation** | Single-file logic, no heavy model loading | `src/secondary_operations/<name>.py` |
 | **Main operation** | Requires device allocation, model loading, or its own module | `src/main_operations/definitions/<name>.py` |
 
-For very simple transforms or custom logic during competition, prefer a secondary operation — it can also be created in the browser via the **Custom Ops** tab.
+For very simple transforms or custom logic during competition, prefer a secondary operation. Operation source is created and edited in the repository; the WebUI does not provide a Custom Ops editor.
 
 ## 2. Implement the operation
 
@@ -35,14 +35,17 @@ class MyFilter(OperationInstance):
 
 ```python
 # src/main_operations/definitions/my_op.py
-from src.modules.my_op.implementation import MyOpImplementation
-from src.utils.device_management_utils.compute_pool import ComputePool
+from src.main_operations.modules.my_op.implementation import MyOpImplementation
 from src.main_operations.definitions.base.base_class import OperationInstance
+from src.utils.device_registry import DeviceRegistry
+from src.utils.model_library import ModelLibrary
 
 class MyOpDefinition(OperationInstance):
-    def __init__(self, model_path: str, device_id: str, compute_pool: ComputePool, threshold: float = 0.1) -> None:
-        device = compute_pool.get_compute_device(device_id)
-        self.impl = MyOpImplementation(model_path, device, threshold)
+    def __init__(self, model_id: str, device_id: str, device_registry: DeviceRegistry,
+                 model_library: ModelLibrary, threshold: float = 0.1) -> None:
+        device_registry.get(device_id)  # IDs are `cpu`, `cuda:N`, or `mx3:N`
+        artifact = model_library.resolve_artifact(model_id, device_id)
+        self.impl = MyOpImplementation(artifact.path, device_id, threshold)
 
     def run(self, frame):
         return self.impl.run(frame)
@@ -92,7 +95,7 @@ Add the operation to a pipeline in the WebUI Pipeline Editor (drag from the oper
 }
 ```
 
-Injected parameters (`compute_pool`, `web_interface`, `network_table`, `camera_manager`, `camera_config_registry`, `logger`) are passed automatically — **do not include them in `action_params`**.
+Injected parameters (`web_interface`, `network_table`, `camera_manager`, `camera_config_registry`, `camera_configs`, `device_registry`, `model_library`, `mx3_coordinator`, `logger`) are passed automatically — **do not include them in `action_params`**.
 
 ## 5. Verify
 

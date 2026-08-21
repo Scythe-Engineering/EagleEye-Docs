@@ -6,24 +6,24 @@ EagleEye Vision System is a multi-threaded, multi-pipeline computer vision backe
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ MainBackend                                              │
+│ MainBackend                                             │
 │                                                         │
 │  ┌─────────────────┐    ┌──────────────────────┐        │
-│  │ CameraThread    │    │ EagleEyeInterface     │        │
-│  │ Manager         │    │ (Flask/SocketIO)      │        │
-│  │                 │    │                       │        │
-│  │  CameraWorker  ─┼───▶│  SSE → WebUI clients  │        │
-│  │  CameraWorker   │    │                       │        │
-│  └────────┬────────┘    └──────────┬────────────┘        │
-│           │ frame+ts               │ web_interface        │
-│           ▼                        ▼                      │
-│  ┌─────────────────────────────────────────────────┐     │
-│  │ Pipeline(s)                                     │     │
-│  │  FlowManager (topological DAG scheduler)        │     │
-│  │   ├─ Operation nodes (main + secondary)         │     │
-│  │   └─ ThreadObjects (parallel branches)          │     │
-│  └──────────────┬──────────────────────────────────┘     │
-│                 │                                        │
+│  │ CameraThread    │    │ EagleEyeInterface     │       │
+│  │ Manager         │    │ (Flask/SocketIO)      │       │
+│  │                 │    │                       │       │
+│  │  CameraWorker  ─┼───▶│  SSE → WebUI clients  │       │
+│  │  CameraWorker   │    │                       │       │
+│  └────────┬────────┘    └──────────┬────────────┘       │
+│           │ frame+ts               │ web_interface      │
+│           ▼                        ▼                    │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │ Pipeline(s)                                     │    │
+│  │  FlowManager (topological DAG scheduler)        │    │
+│  │   ├─ Operation nodes (main + secondary)         │    │
+│  │   └─ ThreadObjects (parallel branches)          │    │
+│  └──────────────┬──────────────────────────────────┘    │
+│                 │                                       │
 │    ┌────────────┴──────────┐                            │
 │    ▼                       ▼                            │
 │  NetworkTables          SSE events                      │
@@ -33,36 +33,39 @@ EagleEye Vision System is a multi-threaded, multi-pipeline computer vision backe
 
 ## Data flow
 
-1. **Camera capture** — `CameraWorker` threads call `camera.get_frame()` in a loop at the camera's target FPS and push frames to `EagleEyeInterface` (for the live feed in Views tab) and to the `CameraThreadManager` frame buffer.
+1. **Camera capture** — `CameraWorker` threads read from the capture backend in a loop at the camera's target FPS and publish a `FramePacket` (image plus capture timing) through `CameraThreadManager`.
 
-2. **Pipeline execution** — Each `Pipeline` has its own thread. The pipeline thread calls `FlowManager.run_flow()` each frame, pulling the current frame from the camera manager.
+2. **Pipeline execution** — Each `Pipeline` has its own thread. The pipeline thread calls `FlowManager.run_flow()` each frame, pulling the current frame packet from the camera manager.
 
 3. **FlowManager scheduling** — Operations are executed in topological timestep order. Operations at the same timestep that occupy different thread slots run concurrently. Single-branch pipelines run on one thread with no synchronization overhead.
 
 4. **Output publishing** — Terminal operations in the pipeline write results to NetworkTables (via the injected `network_table`) and/or to SSE (via the injected `web_interface`).
 
-5. **WebUI updates** — The SSE stream delivers `pipeline_profile`, `pipeline_error`, `system_status`, and `log_update` events to connected browser clients.
+5. **WebUI updates** — The SSE stream delivers `profiling_update`, `pipeline_operation_errors`, `system_status`, and `log_update` events to connected browser clients.
 
 ## Dependency injection
 
-`generate_all_pipelines()` constructs each operation by introspecting its `__init__` signature and providing matching objects from the backend:
+Pipeline construction (`src/config/utils/pipeline.py`) builds each operation by introspecting its `__init__` signature and providing matching objects from the backend:
 
 ```python
-injected = {
-    "web_interface": web_interface,
-    "compute_pool": compute_pool,
-    "network_table": network_table,
-    "camera_manager": camera_manager,
-    "camera_config_registry": camera_config_registry,
-    "logger": logger,
+injectable_dependencies = {
+    "web_interface",
+    "network_table",
+    "camera_manager",
+    "camera_config_registry",
+    "camera_configs",
+    "device_registry",
+    "model_library",
+    "mx3_coordinator",
+    "logger",
 }
 ```
 
-Any constructor parameter whose name matches a key in `injected` is automatically provided. The remaining parameters come from `action_params` in the pipeline config.
+Any constructor parameter whose name is in that set is provided automatically. The remaining parameters come from `action_params` in the pipeline config.
 
 ## Startup sequence
 
-See [Startup Sequence](./startup-sequence) for the exact 10-step `MainBackend.__init__` order.
+See [Startup Sequence](./startup-sequence) for the `MainBackend.__init__` order, and the module-level Rust build and config bootstrap that run before it.
 
 ## Camera system
 

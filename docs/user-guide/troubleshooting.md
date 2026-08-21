@@ -1,71 +1,202 @@
+---
+sidebar_position: 14
+title: Troubleshooting
+---
+
 # Troubleshooting
 
-## Pipelines not loading
+Find your symptom, work down the list. Change one thing at a time.
 
-**Symptom:** Pipeline tab shows no operations, or the backend logs `No cameras configured`.
+Two things to do before anything else:
 
-- Confirm `src/config/pipeline_config.json` is valid JSON with at least one top-level pipeline key.
-- Check that every `action_name` in the config matches a file in `src/main_operations/definitions/` or `src/secondary_operations/`. Names are matched including the `.py` extension.
-- Verify that `device_id` values in `action_params` exist in `ComputePool`. Valid formats: `CPU`, `GPU_0`, `MX3_0`.
-- Check backend logs for `ImportError` or `ModuleNotFoundError` lines — these indicate a missing dependency or typo in the module file.
+1. Open **Settings → System Logs** and read from the top for the first error, not the last.
+2. On the Pi, `journalctl -u eagleeye -f` shows the same output live.
 
-## Rust build fails at startup
+---
 
-**Symptom:** Backend exits immediately with `Failed to build Rust implementations`.
+## The UI will not load
 
-- Make sure a Rust stable toolchain is installed: `rustup toolchain install stable`.
-- On a fresh coprocessor install, run `cargo --version` to confirm Rust is on PATH.
-- Check for write permission issues in the project directory (maturin writes compiled `.so` files there).
-- Look at the full stderr from `src/rust_implementations/build.py` in the logs for the specific compile error.
+| Check | Command / action | Expected |
+|-------|------------------|----------|
+| Service running | `systemctl status eagleeye` | `active (running)` |
+| Port listening | `ss -tlnp \| grep 5001` | a line for port 5001 |
+| Right address | try the IP instead of `<hostname>.local` | page loads |
+| Same network | `ping <pi-address>` from your laptop | replies |
 
-## No camera feed
+Event networks often block mDNS, so `.local` names fail there even when they work in the shop.
+Use the IP address.
 
-**Symptom:** Views tab shows the "no image" placeholder; logs show no cameras detected.
+### The UI loads blank
 
-- Unplug and replug cameras and restart the backend. USB bus IDs are assigned at connection time.
-- Run `lsusb` to confirm the cameras appear as USB devices.
-- Check that the `bus_id` in your `device_input.py` operation matches the bus ID printed at startup (e.g. `1-3.2`).
-- For video file cameras, confirm the file path exists and is readable.
+The page is served but the interface never appears. This usually means the web UI assets are
+missing or incomplete — most often a partial install. Re-run the installer, then restart the
+backend.
 
-## Slow or unstable FPS
+---
 
-- The FlowManager prints per-operation timing to the profiling SSE stream, visible in the Pipeline Editor's profiling overlay.
-- Heavy operations (ONNX inference) on CPU are slower than on GPU/MX3 — verify the correct `device_id` is configured.
-- Use `fps_limiter.py` as a secondary operation to cap a pipeline to a target frame rate and reduce load.
-- Reduce `quad_decimate` in `detect_apriltags.py` if AprilTag detection is the bottleneck (lower value = more detail but slower).
+## Backend exits at startup
 
-## WebUI not loading
+Check `systemctl status eagleeye` and the log.
 
-- Confirm the frontend was built: `cd src/webui && npm run build`. The backend serves static files from the build output; a missing build shows a blank page or 404.
-- Confirm port `5001` is not occupied by another process: `lsof -i :5001`.
-- Check CORS if accessing from a different machine — by default only `localhost:5001`, `localhost:5173`, and `localhost:5174` are allowed. Accessing via IP may require a config change.
+**`Failed to build Rust implementations. Backend initialization cannot continue.`**
 
-## Restart indicator not clearing
+The Rust extension modules could not be compiled at startup.
 
-**Symptom:** The WebUI shows a persistent "restart required" warning after saving a pipeline or custom operation.
+- Confirm the Rust toolchain is installed and on PATH: `cargo --version`.
+- Check free disk space: `df -h`. Compiling needs room.
+- Confirm the service user can write to the install directory — the build writes compiled
+  modules into the project tree.
+- The full compiler error is above this line in the log; read it.
 
-- Click the **Restart** button in the Settings tab. This calls `POST /restart-backend`, which triggers `sudo systemctl restart $SERVICE_NAME`.
-- If the restart button fails, ensure the `eagle` user has passwordless sudo for `systemctl restart eagleeye`:
-  ```
-  eagle ALL=(ALL) NOPASSWD: /bin/systemctl restart eagleeye
-  ```
-- If not running as a systemd service, restart the backend manually.
+**`Could not find class for action: ...`**
 
-## NetworkTables not receiving data
+The pipeline config refers to an operation the backend cannot load — usually a hand-edited
+config or a custom operation that was removed or renamed. Open the pipeline in the editor and
+remove or replace the offending node.
 
-- Confirm the NT server address in `src/general_conf.json` is correct (e.g. `10.TE.AM.2` or `roborio-TEAM-frc.local`).
-- Verify the robot/RoboRIO is powered on and reachable: `ping 10.TE.AM.2`.
-- Check that the pipeline is not disabled for NT output (Settings tab).
-- On first startup the schema manifest is published to the `EagleEye` table — if NT is unreachable this may time out silently. The backend continues running regardless.
+**A traceback mentioning intrinsics or a camera bus ID**
 
-## MX3 accelerator not detected
+A node such as PnP Camera Localization or Temporal Acceleration Preprocessor Rust is
+configured with a camera that has no calibration, or with a bus ID that does not exist. Fix
+the bus ID or [calibrate that camera](./calibrate-intrinsics).
 
-- Confirm the Memryx PCIe/USB device is visible: `lspci | grep -i memryx` or check `dmesg`.
-- MX3 detection uses `get_available_devices()` which queries the Memryx SDK. Install or reinstall the SDK per the hardware documentation.
-- Device IDs are formatted `MX3_0`, `MX3_1`, etc. The index comes from `memx:0`, `memx:1`.
+---
 
-## GPU not detected
+## No cameras
 
-- Confirm CUDA is installed and `nvidia-smi` works.
-- GPU detection uses `torch.cuda.is_available()` or the ONNX Runtime CUDA provider, depending on your install.
-- GPU IDs are formatted `GPU_0`, `GPU_1`, etc., matching the order reported by `nvidia-smi`.
+**Views shows a message instead of camera cards, or the Pipeline tab shows
+`No cameras configured`.**
+
+1. Cameras are detected at startup. After plugging anything in:
+   `sudo systemctl restart eagleeye`.
+2. Confirm the OS sees them: `v4l2-ctl --list-devices`. If it does not, EagleEye will not
+   either — try another port or cable.
+3. If `v4l2-ctl` is missing: `sudo apt install -y v4l-utils`, then restart the backend.
+4. Underpowered USB is a common cause with multiple cameras. Try a powered hub.
+
+**A camera card appears but the image is black.** The device opened but is not delivering
+frames. Try a different port, and check whether another process has the camera open.
+
+**A camera's bus ID changed.** It moved to a different USB port. Bus IDs come from the
+physical port. Move it back, or update `camera_bus_id` everywhere it is referenced.
+
+---
+
+## Pipeline is not active
+
+1. **System** tab — is it listed as running?
+2. **Settings → System Logs** — first error from the top.
+3. Open the pipeline in the editor and confirm every required input port is connected.
+4. Confirm the `camera_bus_id` on every node matches a real camera.
+5. Confirm `apriltag_map_path` points at a file that exists.
+
+---
+
+## No pose, or no data on the robot
+
+Work down the chain in order — each step assumes the one before it passed.
+
+| Step | Check | If it fails |
+|------|-------|-------------|
+| 1 | Camera streams in Views | See [No cameras](#no-cameras) |
+| 2 | Pipeline active in System | See [Pipeline is not active](#pipeline-is-not-active) |
+| 3 | Pose appears in 3D View | Tags not detected, or too few — lower `minimum_detections` temporarily to test |
+| 4 | Pipeline contains a **Publish To NetworkTables** node | Add one. Robot Pose Output alone sends nothing to the robot |
+| 5 | Settings shows NetworkTables connected | Wrong address, or robot code not running |
+| 6 | Key visible in a NetworkTables viewer under the `EagleEye` table | Check `target_key` spelling |
+
+Step 4 is the most common cause. **Robot Pose Output publishes to the UI's 3D view, not to
+NetworkTables.**
+
+---
+
+## Pose is wrong
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Constant offset in one direction | Extrinsics offset wrong or wrong sign | Re-measure from robot center; try flipping the sign |
+| Mirrored left/right | Yaw sign | Negate yaw |
+| Scale error — one meter reads as 1.15 m | ChArUco square size typed in did not match the print | Measure the printed board, recalibrate |
+| Fine up close, bad far away | Weak intrinsics | Recalibrate with more tilt and corner coverage |
+| Occasional wild jumps | Single-tag estimates | Raise `minimum_detections`; add Pose Outlier Filter Rust |
+| Pose in the wrong place on the field entirely | Wrong AprilTag map | Use the map for the field you are on; the same map must be set on both PnP and the preprocessor |
+| Was fine, now wrong | Camera moved in its mount | Re-aim and redo extrinsics |
+
+Detailed procedure: [Verify and Tune](./verify-and-tune).
+
+---
+
+## Low or unstable frame rate
+
+1. Open the Pipeline tab profiling panels and the `i` **Profiling details** view. Find the
+   slowest operation before changing anything.
+2. If AprilTag detection dominates, add
+   [temporal acceleration](./temporal-acceleration) — the largest single improvement.
+3. Raise `quad_decimate` (`2.0` → `3.0`). Faster, drops distant tags sooner.
+4. Lower `max_regions` on the temporal acceleration node.
+5. Lower **view stream downscale** in Settings so previews cost less.
+6. Stop pipelines you are not using; they share the same CPU.
+7. Check CPU temperature in the System tab. A hot Pi throttles — improve airflow or add a
+   heatsink.
+
+Raising `nthreads` can help or hurt on a Pi. Measure after changing it.
+
+---
+
+## Tags drop out during motion
+
+The temporal acceleration node's predicted regions are too tight for how fast the robot turns.
+Raise `padding_factor` toward `0.65` or higher, or remove the node to confirm that is the
+cause.
+
+---
+
+## Detection never recovers after losing tags
+
+Confirm the `camera_pose` feedback edge into the temporal acceleration node is marked as a
+default connection — it should be drawn dashed, and right-clicking it should offer **Remove
+Default Status**. Without that, the loop is treated as a cycle instead of feedback.
+
+---
+
+## Restart-required indicator will not clear
+
+Click **Restart Backend** in Settings. If nothing happens, restart from a shell:
+
+```bash
+sudo systemctl restart eagleeye
+```
+
+If the button consistently fails but the shell command works, the service account is not
+allowed to restart the service without a password — an install-level configuration issue.
+
+---
+
+## Accelerators not detected
+
+The startup log lists detected inference devices. If yours is missing:
+
+- **GPU** — confirm the driver and CUDA stack work outside EagleEye (`nvidia-smi`).
+- **MX3** — confirm the device is visible to the OS and the vendor SDK is installed.
+
+Device IDs are lowercase and colon-indexed: `cpu`, `cuda:0`, `mx3:0`. Read the startup log line
+listing detected devices rather than assuming an ID — a mistyped device ID raises
+`unknown device ID: ...`.
+
+CPU is always available; operations configured for a missing device will not start.
+
+---
+
+## Still stuck
+
+Collect this before asking for help:
+
+1. Settings → **Download Logs**.
+2. Screenshots of the System tab and the Pipeline tab.
+3. Your pipeline's node settings, especially bus IDs and `apriltag_map_path`.
+4. What changed since it last worked.
+
+:::note
+Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). Quoted error
+strings above appear verbatim in the source at that commit.
+:::

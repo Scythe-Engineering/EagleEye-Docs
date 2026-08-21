@@ -42,21 +42,24 @@ def visualize(self) -> np.ndarray | None:
 
 ## Main operations
 
-Main operations live in `src/main_operations/definitions/` and typically wrap heavier module code under `src/modules/`.
+Main operations live in `src/main_operations/definitions/` and typically wrap heavier module code under `src/main_operations/modules/`.
 
 - **File:** `src/main_operations/definitions/<name>.py`
 - **Class:** `<CamelCase>Definition` (e.g. `ApriltagCnnPreprocessorDefinition`)
-- **Pattern:** Parse params → fetch device from `ComputePool` → instantiate implementation
+- **Pattern:** Parse params → validate a `DeviceRegistry` ID → resolve a managed model artifact → instantiate implementation.
 
 ```python
-from src.modules.my_model.implementation import MyModelImpl
-from src.utils.device_management_utils.compute_pool import ComputePool
+from src.main_operations.modules.my_model.implementation import MyModelImpl
 from src.main_operations.definitions.base.base_class import OperationInstance
+from src.utils.device_registry import DeviceRegistry
+from src.utils.model_library import ModelLibrary
 
 class MyModelDefinition(OperationInstance):
-    def __init__(self, model_path: str, device_id: str, compute_pool: ComputePool) -> None:
-        device = compute_pool.get_compute_device(device_id)
-        self.impl = MyModelImpl(model_path, device)
+    def __init__(self, model_id: str, device_id: str, device_registry: DeviceRegistry,
+                 model_library: ModelLibrary) -> None:
+        device_registry.get(device_id)
+        artifact = model_library.resolve_artifact(model_id, device_id)
+        self.impl = MyModelImpl(artifact.path, device_id)
 
     def run(self, frame):
         return self.impl.run(frame)
@@ -79,15 +82,19 @@ Every operation that appears in the Pipeline Editor must have a matching config 
   ],
   "output_nodes": ["detections"],
   "parameters": {
-    "model_path": {
+    "model_id": {
       "type": "str",
-      "description": "Path to ONNX weights",
-      "required": true
+      "description": "Managed model ID",
+      "required": true,
+      "ui_hint": "model_library",
+      "device_param": "device_id"
     },
     "device_id": {
       "type": "str",
-      "description": "Compute device ID (e.g. CPU, GPU_0, MX3_0)",
-      "required": true
+      "description": "Canonical device ID (e.g. cpu, cuda:0, mx3:0)",
+      "required": true,
+      "ui_hint": "device_registry",
+      "model_param": "model_id"
     },
     "conf_threshold": {
       "type": "float",

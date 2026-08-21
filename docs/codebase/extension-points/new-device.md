@@ -1,113 +1,54 @@
 # Adding a New Device
 
-To integrate a new hardware accelerator with EagleEye, subclass `ComputeDevice` and register it in `MainBackend`.
+There is no device plugin interface. A device is a descriptor in `DeviceRegistry` plus an artifact-selection rule in `ModelLibrary`; the code that actually runs a model lives in the operation that uses the device.
 
-## 1. Subclass ComputeDevice
+## 1. Extend discovery
 
-```python
-# src/utils/device_management_utils/coral_tpu.py
-from src.utils.device_management_utils.compute_device import ComputeDevice
-
-
-class CoralTpu(ComputeDevice):
-    """Google Coral TPU device via pycoral."""
-
-    def __init__(self, device_id: str = "CORAL_0") -> None:
-        super().__init__(device_id=device_id, device_type="CORAL")
-        self._interpreter = None
-
-    def load_model(self, model_path: str) -> None:
-        """Load an Edge TPU compiled TFLite model."""
-        from pycoral.utils.edgetpu import make_interpreter
-        self._interpreter = make_interpreter(model_path)
-        self._interpreter.allocate_tensors()
-
-    def run(self, input_data) -> any:
-        """Run inference on the loaded model."""
-        import numpy as np
-        from pycoral.adapters import common
-        interpreter = self._interpreter
-        common.set_input(interpreter, input_data)
-        interpreter.invoke()
-        return common.output_tensor(interpreter, 0).copy()
-
-    def stop(self) -> None:
-        """Release TPU resources."""
-        self._interpreter = None
-```
-
-### Required interface
-
-| Method | Purpose |
-|---|---|
-| `__init__(device_id, device_type)` | Set ID and type via `super().__init__()` |
-| `load_model(model_path)` | Load model weights onto the device |
-| `run(input_data)` | Execute inference and return output |
-| `stop()` | Release device resources on shutdown |
-
-The `device_id` is the string operations use in `action_params` (e.g. `"CORAL_0"`). `device_type` is a string for `get_compute_devices_by_type()` queries.
-
-## 2. Add hardware discovery
-
-Update `src/utils/get_available_devices.py` to detect the new hardware. For example:
+Add the detection branch to `DeviceRegistry.discover` in `src/utils/device_registry.py`, appending one `DeviceDescriptor` per unit:
 
 ```python
-def get_available_devices(logger=None):
-    devices = {}
-    # ... existing CPU, GPU, MX3 detection ...
-
-    # Coral detection
-    try:
-        from pycoral.utils.edgetpu import list_edge_tpus
-        tpus = list_edge_tpus()
-        if tpus:
-            devices["CORAL"] = [t.get("type", "usb") for t in tpus]
-    except ImportError:
-        pass
-
-    return devices
+DeviceDescriptor(
+    device_id=f"coral:{index}",       # canonical, lowercase, colon-separated
+    display_name=f"Coral Edge TPU ({path})",
+    device_type="coral",
+    physical_index=index,
+)
 ```
 
-## 3. Register in MainBackend
+Follow the existing conventions: import vendor SDKs lazily inside the branch, catch `ImportError`/`RuntimeError`/`OSError` and log rather than raise, and emit devices in a deterministic order. Add an optional keyword argument (like the existing `cuda_devices` and `mx3_paths`) so tests can inject a fake inventory.
 
-Add an initialization method in `src/main_backend.py`:
+## 2. Teach ModelLibrary about the artifact slot
+
+`ModelLibrary.resolve_artifact` (`src/utils/model_library.py`) maps a device ID prefix to an ordered tuple of artifact slots and raises `ArtifactError` for anything it does not recognize. Add a branch for the new prefix and, if the device needs extra metadata or a companion file, follow the `mx3_dfp` / `mx3_profile` / `mx3_postprocessor` pattern.
+
+## 3. Use the device in an operation
+
+The operation declares `device_registry` and `model_library` in its `__init__` so pipeline construction injects them, then validates and resolves:
 
 ```python
-def _initialize_coral_devices(self) -> None:
-    coral_devices = available_devices.get("CORAL", [])
-    if not coral_devices:
-        return
-
-    from src.utils.device_management_utils.coral_tpu import CoralTpu
-    for idx, _ in enumerate(coral_devices):
-        try:
-            device = CoralTpu(device_id=f"CORAL_{idx}")
-            self.compute_pool.add_compute_device(device)
-            self.logger.log(f"Added Coral TPU device: CORAL_{idx}")
-        except Exception as e:
-            self.logger.log(f"Warning: Failed to add Coral TPU {idx}: {e}")
+def __init__(self, device_registry, model_library, model_id: str, device_id: str, ...):
+    device_registry.get(device_id)          # raises DeviceNotFoundError on bad IDs
+    artifact = model_library.resolve_artifact(model_id, device_id)
+    self._session = load_my_runtime(artifact.path)
 ```
 
-Then call it from `_initialize_compute_devices()`:
+If the hardware needs a long-lived shared runtime across operations, that belongs in a coordinator object created in `MainBackend.__init__` and added to the injectable dependency set in `src/config/utils/pipeline.py`, as `mx3_coordinator` is.
 
-```python
-def _initialize_compute_devices(self) -> None:
-    # ... existing CPU, MX3, GPU init ...
-    self._initialize_coral_devices()
-```
+## 4. Expose it in configuration
 
-## 4. Use in operations
-
-Operations reference the new device by ID in `action_params`:
+Declare the parameters in the operation's `_config_def.json` so the Web UI renders the right pickers:
 
 ```json
-{
-  "action_name": "my_coral_op.py",
-  "action_params": {
-    "model_path": "{project_root}/files/models/my_model_edgetpu.tflite",
-    "device_id": "CORAL_0"
-  }
+"device_id": {
+  "type": "str",
+  "description": "Inference device",
+  "default": "cpu",
+  "required": true,
+  "restart_for_change": true,
+  "ui_hint": "device_registry",
+  "model_param": "model_id",
+  "allowed_device_kinds": ["cpu", "coral"]
 }
 ```
 
-The operation constructor calls `compute_pool.get_compute_device("CORAL_0")` to get the `CoralTpu` instance, then `device.load_model(model_path)`.
+`allowed_device_kinds` filters by `DeviceDescriptor.device_type`. Because discovery runs once at startup, new hardware requires a backend restart before it appears.

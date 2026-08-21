@@ -5,22 +5,22 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Pipeline-first',
+    title: 'Install on your hardware',
     description:
-      'Understand how frames flow through definitions and secondary ops, with quick links to config and debugging notes.',
-    link: {label: 'Pipelines', to: '/docs/codebase/pipelines/overview'},
+      'Flash or SSH into supported Debian 12 ARM64 hardware, run the install command, and reach the web UI on port 5001.',
+    link: {label: 'Install', to: '/docs/user-guide/install'},
   },
   {
-    title: 'Device-aware',
+    title: 'Set up cameras',
     description:
-      'CPU, GPU, and MX3 paths are covered, plus guidance on extending the compute pool for new hardware.',
-    link: {label: 'Device Management', to: '/docs/codebase/device-management/overview'},
+      'Discover cameras, check their views, calibrate intrinsics, and place them on the robot for a usable field pose.',
+    link: {label: 'Cameras', to: '/docs/user-guide/cameras'},
   },
   {
-    title: 'Operator-friendly',
+    title: 'Publish AprilTag pose',
     description:
-      'User guide walks through setup, running, and troubleshooting with placeholders to fill for your environment.',
-    link: {label: 'User Guide', to: '/docs/user-guide/overview'},
+      'Send robot pose to NetworkTables so your drive code can consume it, then keep it healthy on match day.',
+    link: {label: 'NetworkTables', to: '/docs/user-guide/networktables'},
   },
 ];
 
@@ -51,6 +51,10 @@ export default function HomepageFeatures() {
             <Feature key={props.title} {...props} />
           ))}
         </div>
+        <p className={styles.devNote}>
+          Extending EagleEye or adding an operation?{' '}
+          <Link to="/docs/codebase/overview">Developer Docs</Link>
+        </p>
       </div>
     </section>
   );

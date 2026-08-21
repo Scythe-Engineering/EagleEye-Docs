@@ -8,7 +8,7 @@ EagleEye is designed for extension. This guide helps you choose the right extens
 |---|---|---|
 | Add lightweight frame processing | [Secondary operation](./new-operation) | `src/secondary_operations/` |
 | Add ML model inference or complex orchestration | [Main operation](./new-operation) | `src/main_operations/definitions/` |
-| Integrate a new accelerator (TPU, FPGA, etc.) | [New device](./new-device) | `src/utils/device_management_utils/` |
+| Integrate a new accelerator (TPU, FPGA, etc.) | [New device](./new-device) | `src/utils/device_registry.py` + model/runtime support |
 | Add performance-critical frame processing in Rust | [Rust module](./rust-modules) | `src/rust_implementations/` |
 | Add a new page or tool to the WebUI | [New UI tab](./new-ui-tab) | `src/webui/` |
 
@@ -16,8 +16,7 @@ EagleEye is designed for extension. This guide helps you choose the right extens
 
 | Type | Typical complexity | Restart required |
 |---|---|---|
-| Secondary operation (in-browser) | Low | Yes (reload classes) |
-| Secondary operation (code) | Low | Yes |
+| Secondary operation | Low | Yes |
 | Main operation | Medium | Yes |
 | New device | Medium | Yes |
 | Rust module | High (Rust knowledge needed) | Yes (+ recompile) |
@@ -32,6 +31,6 @@ For any new operation (main or secondary):
 4. Restart the backend
 
 For devices:
-1. Subclass `ComputeDevice`
-2. Register in `MainBackend._initialize_compute_devices()`
-3. Reference by device ID in operation `action_params`
+1. Extend `DeviceRegistry.discover` with a canonical descriptor.
+2. Add model-artifact selection and operation/runtime support.
+3. Reference the canonical device ID in operation `action_params`.

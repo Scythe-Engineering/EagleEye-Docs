@@ -1,35 +1,34 @@
 # Device Management Overview
 
-EagleEye abstracts hardware accelerators behind a uniform `ComputeDevice` API and a central `ComputePool` registry. Operations request devices by ID during construction; the pool serves the correct implementation.
+EagleEye does not wrap accelerators in a device abstraction that executes models. Instead it keeps three separate objects, all created once in `MainBackend.__init__` and injected into operations that ask for them by constructor parameter name:
 
-## Core files
+| Object | File | Role |
+|---|---|---|
+| `DeviceRegistry` | `src/utils/device_registry.py` | Immutable inventory of inference devices discovered at startup |
+| `ModelLibrary` | `src/utils/model_library.py` | Managed model metadata and artifacts under `files/models/` |
+| `Mx3RuntimeCoordinator` | `src/utils/mx3_runtime.py` | Owner of shared per-device MemryX MX3 runtimes and stream bindings |
 
-| File | Role |
-|---|---|
-| `src/utils/device_management_utils/compute_device.py` | Abstract base class for all devices |
-| `src/utils/device_management_utils/compute_pool.py` | Device registry and lookup |
-| `src/utils/device_management_utils/cpu.py` | CPU device (ONNX Runtime CPU EP) |
-| `src/utils/device_management_utils/gpu.py` | GPU device (CUDA/ONNX) |
-| `src/utils/device_management_utils/mx3_accelerator.py` | Memryx MX3 TPU device |
-| `src/utils/get_available_devices.py` | Hardware discovery at startup |
+An operation that runs inference typically takes a `model_id` and a `device_id` parameter, resolves the artifact with `model_library.resolve_artifact(model_id, device_id)`, and loads it itself with the appropriate framework (Ultralytics/PyTorch, ONNX Runtime, TensorRT, or the MX3 coordinator).
 
 ## Device ID formats
 
-| Device | ID | Example |
+| Device | Canonical ID | Example |
 |---|---|---|
-| CPU | `CPU` | `CPU` |
-| NVIDIA GPU | `GPU_<index>` | `GPU_0`, `GPU_1` |
-| Memryx MX3 | `MX3_<index>` | `MX3_0`, `MX3_1` |
+| CPU | `cpu` | `cpu` |
+| NVIDIA CUDA GPU | `cuda:<index>` | `cuda:0`, `cuda:1` |
+| MemryX MX3 | `mx3:<index>` | `mx3:0`, `mx3:1` |
 
-The index comes from the hardware discovery order: GPUs are indexed as reported by CUDA/ONNX, MX3 accelerators are indexed from `memx:0`, `memx:1`, etc.
+IDs are exact; aliases are not accepted. CUDA indices follow `torch.cuda` enumeration order. MX3 indices come from the `/dev/memxN` node number.
 
 ## Lifecycle
 
-1. `get_available_devices()` probes hardware and returns a dict of available device names.
-2. `MainBackend._initialize_compute_devices()` creates device objects and registers them with `ComputePool`.
-3. During pipeline construction, each operation that declares `compute_pool` in its constructor receives the pool and calls `pool.get_compute_device(device_id)`.
-4. On shutdown, `compute_pool.stop_all_devices()` releases resources.
+1. `DeviceRegistry.discover(logger=...)` runs once in `MainBackend.__init__`. It always adds `cpu`, adds one entry per CUDA device if `torch` imports and reports CUDA available, and adds one entry per `/dev/memx[0-9]*` node on POSIX systems.
+2. The registry, model library, and MX3 coordinator are passed to `EagleEyeInterface` (registry and library only) and to `generate_all_pipelines(...)`.
+3. Pipeline construction injects `device_registry`, `model_library`, and `mx3_coordinator` into any operation whose `__init__` declares those parameter names.
+4. Operations validate their configured `device_id` through `DeviceRegistry.get(device_id)`, which raises `DeviceNotFoundError` for unknown IDs.
+
+There is no runtime registration or removal API: the inventory is fixed for the life of the process, and adding hardware requires a backend restart.
 
 ## When to add a new device
 
-When integrating new accelerator hardware (Coral TPU, Hailo, FPGA, etc.), subclass `ComputeDevice` and register in `MainBackend._initialize_compute_devices()`. See [New Device](../extension-points/new-device) for the walkthrough.
+Supporting new accelerator hardware means extending `DeviceRegistry.discover` with a new canonical ID prefix and teaching `ModelLibrary.resolve_artifact` which artifact slot that prefix can use. See [New Device](../extension-points/new-device).

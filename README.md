@@ -1,41 +1,37 @@
-# Website
+# EagleEye Docs
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Documentation site for [EagleEye](https://github.com/Scythe-Engineering/EagleEye-Vision-System), the FRC vision system by Scythe Engineering. Published at
+<https://scythe-engineering.github.io/EagleEye-Docs/>.
 
-## Installation
+The site has two sections:
+
+- **User Guide** — installing EagleEye, using the web UI, building an AprilTag pipeline, and publishing robot pose to NetworkTables.
+- **Developer Docs** — architecture, pipelines, device management, WebUI internals, and extension points.
+
+Built with [Docusaurus](https://docusaurus.io/) 3.9. Requires Node.js 20+.
+
+## Local development
 
 ```bash
-yarn
+npm install
+npm start
 ```
-
-## Local Development
-
-```bash
-yarn start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
 ## Build
 
 ```bash
-yarn build
+npm run build
+npm run serve
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+`npm run build` generates static content into `build/`.
 
 ## Deployment
 
-Using SSH:
+The site is served from GitHub Pages under the `/EagleEye-Docs/` base path.
 
 ```bash
-USE_SSH=true yarn deploy
+GIT_USER=<your GitHub username> npm run deploy
 ```
 
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+This builds the site and pushes it to the `gh-pages` branch. Use `USE_SSH=true` instead of `GIT_USER` if you authenticate over SSH.

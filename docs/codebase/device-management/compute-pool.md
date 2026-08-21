@@ -1,48 +1,51 @@
-# Compute Pool
+---
+title: Device Registry
+sidebar_label: Device Registry
+---
 
-`ComputePool` (`src/utils/device_management_utils/compute_pool.py`) is a simple registry that maps device IDs to `ComputeDevice` instances. It is created once in `MainBackend` and injected into every pipeline as a shared resource.
+# Device Registry
+
+`DeviceRegistry` (`src/utils/device_registry.py`) is an immutable inventory of the inference devices found at startup. It replaces the older compute-pool design: it does not create, own, or stop device objects, and it has no registration API after construction.
 
 ## API
 
 ```python
-from src.utils.device_management_utils.compute_pool import ComputePool
-from src.utils.device_management_utils.cpu import CPU
+from src.utils.device_registry import DeviceNotFoundError, DeviceRegistry
 
-pool = ComputePool()
+# Built once in MainBackend.__init__
+registry = DeviceRegistry.discover(logger=logger)
 
-# Register devices
-pool.add_compute_device(CPU())               # CPU (id: "CPU")
-pool.add_compute_device(GPU(device_id="GPU_0"))   # first NVIDIA GPU
-pool.add_compute_device(MX3Accelerator(device_id="MX3_0"))  # first MX3
+# Full inventory, deterministic order (cpu, then cuda:N, then mx3:N)
+for descriptor in registry.descriptors():
+    print(descriptor.device_id, descriptor.display_name, descriptor.device_type)
 
-# Retrieve by ID (used by operations)
-cpu = pool.get_compute_device("CPU")
-gpu = pool.get_compute_device("GPU_0")
+# Exact-ID lookup; aliases are not accepted
+descriptor = registry.get("cuda:0")
 
-# Query by type
-cpu_devices = pool.get_compute_devices_by_type("CPU")
-
-# Remove
-pool.remove_compute_device_by_id("GPU_0")
-
-# Shutdown
-pool.stop_all_devices()
+try:
+    registry.get("GPU_0")
+except DeviceNotFoundError:
+    ...
 ```
 
-## Initialization path
+Direct construction from descriptors is also supported (`DeviceRegistry(devices)`); duplicate canonical IDs raise `DeviceRegistryError`.
 
-`MainBackend._initialize_compute_devices()` handles all registration:
+## Discovery
 
-1. **CPU** — always registered if `get_available_devices()` reports `"CPU"` present.
-2. **MX3** — one `MX3Accelerator` instance per detected `memx:X` device. Device IDs: `MX3_0`, `MX3_1`, etc.
-3. **GPU** — one `GPU` instance per CUDA-capable GPU. Device IDs: `GPU_0`, `GPU_1`, etc.
+`DeviceRegistry.discover()` performs, in order:
 
-Failed device registrations are logged as warnings and skipped — the backend continues without the failed device.
+1. Always append `cpu`, with `platform.processor()` as the display name.
+2. Import `torch` lazily. If `torch.cuda.is_available()`, append `cuda:<i>` for each device up to `torch.cuda.device_count()`. `ImportError`, `RuntimeError`, and `OSError` are logged and treated as "no CUDA".
+3. On POSIX, glob `/dev/memx[0-9]*` and append `mx3:<n>` for each numeric suffix, sorted by index.
+
+Discovery runs exactly once per process. Hot-plugged hardware is not picked up until restart.
 
 ## Error behavior
 
-`get_compute_device(id)` raises `ValueError` if the ID is not registered. This surfaces early during pipeline construction (at startup), not at runtime. Always validate your `device_id` values in `action_params` before deploying.
+`DeviceRegistryError` is the base class; `DeviceNotFoundError` subclasses it and `KeyError`. Operations that validate `device_id` at construction surface bad IDs during pipeline creation, which `generate_all_pipelines` reports through `publish_operation_errors(...)` to the Web UI rather than crashing the backend.
+
+`ModelLibrary.resolve_artifact` raises `ArtifactError` for a device ID it cannot map to an artifact slot, including syntactically invalid IDs.
 
 ## Thread safety
 
-`ComputePool` itself is not thread-safe (no locking). Devices are registered once at startup before any pipeline threads begin; reads during pipeline execution are safe because no concurrent writes occur after initialization.
+The registry is read-only after construction, so concurrent reads from pipeline threads are safe. `ModelLibrary` guards its manifest with an `RLock`; the registry needs no lock.

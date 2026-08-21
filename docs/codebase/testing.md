@@ -66,7 +66,7 @@ def test_rust_module():
 | File | What it tests |
 |---|---|
 | `test_system_init.py` | `MainBackend` initialization sequence with mocked hardware |
-| `test_operation_initialization.py` | All operation constructors with a `ComputePool` (CPU only) |
+| `test_operation_initialization.py` | All discoverable operation constructors with default dummy dependencies |
 | `test_operation_runs.py` | `run()` method of each operation with synthetic frame data |
 | `test_pose_fusion.py` | Multi-input pose fusion logic |
 | `test_granular_profiling.py` | FlowManager profiling snapshots and per-op timing |
@@ -84,8 +84,6 @@ For a new operation, create or add to `test_operation_runs.py`:
 ```python
 import numpy as np
 import pytest
-from src.utils.device_management_utils.compute_pool import ComputePool
-from src.utils.device_management_utils.cpu import CPU
 from src.secondary_operations.my_transform import MyTransform
 
 

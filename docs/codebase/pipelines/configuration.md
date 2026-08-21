@@ -12,7 +12,7 @@ This is a trimmed excerpt from the actual `pipeline_config.json` showing the key
     {
       "action_name": "device_input.py",
       "action_params": {
-        "bus_id": "basic_test",
+        "camera_bus_id": "basic_test",
         "frame_rotation": 0
       },
       "position": { "x": 100, "y": 100 },
@@ -101,7 +101,7 @@ Any string in `action_params` containing `{project_root}` is substituted with th
 
 ## Adding a new pipeline
 
-1. Add a new top-level key to `pipeline_config.json` with at least a `device_input.py` node configured with the correct `bus_id`.
+1. Add a new top-level key to `pipeline_config.json` with at least a `device_input.py` node configured with the correct `camera_bus_id`.
 2. Connect downstream operations as edges in the `connections` array.
 3. Restart the backend (or click **Restart** in the Settings tab).
 
@@ -110,7 +110,7 @@ The easier route is to use the **Pipeline Editor** in the WebUI, which generates
 ## Validation checklist
 
 - Every `action_name` exists as a file in `src/main_operations/definitions/` or `src/secondary_operations/`.
-- Every `device_id` in `action_params` matches a registered device ID (`CPU`, `GPU_0`, `MX3_0`).
+- Every `device_id` in `action_params` matches an exact startup registry ID (`cpu`, `cuda:N`, or `mx3:N`).
 - The connection graph is acyclic (except for temporal `is_default` edges, which are allowed feedback loops).
 - All `uuid` values are unique within the pipeline.
 - Paths using `{project_root}` resolve to files that exist on the target machine.

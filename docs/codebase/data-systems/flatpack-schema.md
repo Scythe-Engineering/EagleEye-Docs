@@ -1,31 +1,35 @@
 # Flatpack Schema
 
-EagleEye uses a custom binary serialization format called **Flatpack** (FPKM — FlatPacK Manifest) for publishing structured data to NetworkTables. It is designed to be compact, typed, and self-describing via a schema manifest.
+Flatpack is a compact binary serialization module in `src/utils/flatpack_schema/`. It defines a schema manifest format (`FPKM`) and a value payload format (`FPK1`).
+
+:::note
+Flatpack is not currently wired into the running system. `generate_schema_manifest_bytes()` is not called outside its own module, and the pipeline operation that writes to NetworkTables (`publish_to_networktables.py`) publishes wpimath struct types through NT4 topics rather than Flatpack payloads. Treat this page as a description of the module, not of live wire traffic.
+:::
 
 ## Schema manifest
 
-At startup, `generate_schema_manifest_bytes()` (`src/utils/flatpack_schema/schema_manifest.py`) produces a binary manifest describing all known schemas. This manifest is published to `EagleEye/schema_manifest` in NetworkTables.
+`generate_schema_manifest_bytes()` (`schema_manifest.py`) returns a binary manifest describing every known schema descriptor.
 
 ### Manifest wire format
 
 ```
-Header:  [4 bytes] b"FPKM"
-Version: [1 byte]  uint8 = 1
-Length:  [4 bytes] uint32 LE — length of the payload
-Payload: [N bytes] packed schema descriptors
+Header:  [4 bytes] MANIFEST_HEADER (b"FPKM")
+Version: [1 byte]  uint8 MANIFEST_VERSION
+Length:  [4 bytes] uint32 LE — payload length
+Payload: [N bytes] uint16 LE descriptor count, then packed descriptors
 ```
 
 ### Schema descriptor encoding
 
-Each schema descriptor in the payload:
-
 ```
-name_len:        [1 byte]  uint8 — length of name string
-name:            [N bytes] UTF-8 string
+name_len:        [1 byte]  uint8
+name:            [N bytes] UTF-8
 kind:            [1 byte]  uint8 — SchemaKind constant
-component_count: [1 byte]  uint8 — number of component names
-components:      for each component: [1 byte len][N bytes UTF-8 name]
+component_count: [1 byte]  uint8
+components:      per component: [1 byte len][N bytes UTF-8]
 ```
+
+Names and component names are limited to `MAX_NAME_LENGTH` (255) encoded bytes.
 
 ### SchemaKind constants
 
@@ -58,21 +62,27 @@ components:      for each component: [1 byte len][N bytes UTF-8 name]
 
 ## Serialization
 
-Each schema class extends `FlatpackSchema` and implements:
-- `can_handle(value) -> bool` — returns `True` if the value matches this schema's expected shape
-- `serialize(value) -> bytes` — packs the value into little-endian binary
+Each schema class implements:
+
+- `can_handle(value) -> bool` — whether the value matches this schema's shape
+- `serialize(value) -> bytes` — little-endian packing
 
 Example — `Pose2DSchema.serialize()`:
 
 ```python
 def serialize(self, value: dict) -> bytes:
-    x = float(value["x"])
-    y = float(value["y"])
-    rotation = float(value["rotation"])
-    return pack("<fff", x, y, rotation)
+    return pack("<fff", float(value["x"]), float(value["y"]), float(value["rotation"]))
 ```
 
-The registry (`src/utils/flatpack_schema/registry.py`) selects the appropriate schema by calling `can_handle()` on each registered schema in order.
+`FlatpackRegistry.serialize(value)` (`registry.py`) walks its schema list in order, uses the first schema whose `can_handle()` returns `True`, and returns `(encoded_payload, schema_name)`. Schemas are registered most-specific first (3D before 2D) so a 3D value is not matched by a 2D schema.
+
+### Payload framing
+
+`_wrap_payload` prefixes the packed value with the schema name:
+
+```
+b"FPK1" + [1 byte name_len] + name (UTF-8) + payload
+```
 
 ## Python value conventions
 

@@ -11,59 +11,68 @@ self._sse_queue: queue.Queue | None = None
 self._sse_queue_lock = threading.Lock()
 ```
 
-When a new client connects to `/sse/stream`, a fresh queue is created (last-connection-wins; only one active SSE connection is supported at a time). Events from multiple background threads are placed on this shared queue.
+When a client connects to `/sse/stream`, `_sse_stream()` creates a fresh `queue.Queue(maxsize=100)` and installs it as *the* queue (last connection wins; only one active SSE connection is supported). On connect it also replays cached pipeline operation errors and any cached system-update progress.
 
-The `_sse_stream()` generator reads from the queue in a blocking loop and yields formatted SSE messages:
+The generator blocks on `q.get(timeout=1.0)`; on timeout it yields a `: keepalive` comment so proxies do not close the connection. Messages are formatted by `_format_sse`:
 
 ```
 event: <event_name>\ndata: <json_payload>\n\n
 ```
 
+`_publish_event(name, data)` JSON-serializes with `allow_nan=False` (serialization failures are logged at most once every 5 s and dropped) and uses `put_nowait`. When the queue is full it drops the **oldest** event and retries, logging the drop.
+
 ## Named events
 
 | Event | Published by | Rate | Payload |
 |---|---|---|---|
-| `heartbeat` | `_sse_heartbeat_loop` thread | Every 5 s | `{}` |
-| `log_update` | `_log_monitor_loop` thread | When new log lines appear | `{"messages": [...]}` |
-| `system_status` | `_system_status_loop` thread | Every 1.5 s | `{"cpu": float, "ram": float, "gpu": float\|null}` |
-| `pipeline_error` | Pipeline threads (via `web_interface.publish_pipeline_error()`) | On exception | `{"pipeline_name": str, "operation_name": str, "error": str, "seq": int}` |
-| `pipeline_profile` | Pipeline threads (via `web_interface.publish_pipeline_profile()`) | Every ~300 ms | Profiling snapshot (see below) |
+| `heartbeat` | `_sse_heartbeat_loop` | Every 5 s | `{"ts": float}` |
+| `log_update` | `_log_monitor_loop` | On new log lines (polls every 0.1 s) | `{"messages": [...]}` — all formatted log lines |
+| `system_status` | `_system_status_loop` | Every 1.5 s | Nested dicts: `cpu`, `memory`, `storage`, `pipelines`, `network_table` |
+| `profiling_update` | `_sse_heartbeat_loop` via `_publish_profiling_updates` | At most every 0.3 s per pipeline, only for a new `frame_seq` | Profiling snapshot (below) |
+| `pipeline_operation_errors` | `_sse_heartbeat_loop` via `_publish_cached_pipeline_errors`, and on config writes | When the error cache is dirty | Normalized per-pipeline operation error payload |
+| `system_update_progress` | System update routines | During an update | Progress payload (replayed to new clients) |
+| `mx3_compilation_progress` | `model_library_mixin` | During MX3 compilation | `Mx3CompilationStatus.to_dict(log_limit=5)` |
+| `update_robot_transform` | `update_robot_transform()` | On call | `{"transform_matrix": [...]}` |
+| `update_camera_pose` | `update_camera_pose()` | On call | `{"camera_bus_id": str, "camera_name": str, ...}` |
+| `update_detected_objects` | `update_detected_objects()` | On call | `{"detections": [...]}` |
 
 ## Background threads
 
-Three threads are started in `EagleEyeInterface.__init__()`:
+Three daemon threads are started in `EagleEyeInterface.__init__()`:
 
 ### Heartbeat thread
 
-```python
-Thread(target=self._sse_heartbeat_loop, daemon=True).start()
-```
-
-Sleeps 5 seconds, then pushes a `heartbeat` event. Used by the frontend to detect dropped connections.
+`_sse_heartbeat_loop` wakes every `min(profiling_interval, 0.1)` seconds. On each pass it publishes cached pipeline errors and pending profiling snapshots, and emits `heartbeat` when 5 s have elapsed. Profiling and error events therefore originate on this thread, not on pipeline threads.
 
 ### Log monitor thread
 
-```python
-Thread(target=self._log_monitor_loop, daemon=True).start()
-```
-
-Polls the `Logger` instance for new messages. When the message count increases, it pushes a `log_update` event containing all new messages since the last update.
+`_log_monitor_loop` polls `logger.message_history` every 0.1 s and publishes `log_update` when the message count grows.
 
 ### System status thread
 
-```python
-Thread(target=self._system_status_loop, daemon=True).start()
+`_system_status_loop` builds the payload with `psutil` every 1.5 s. If `psutil` fails, `cpu`/`memory`/`storage` are replaced with `{"status": "unavailable", "error": ...}` and the failure is logged once.
+
+### `system_status` payload shape
+
+```json
+{
+  "cpu": {"percent": 12.5, "cores": 8, "temperature_c": 46.0, "status": "ok"},
+  "memory": {"percent": 41.2, "used_mb": 6600.0, "total_mb": 16000.0, "status": "ok"},
+  "storage": {"percent": 55.0, "used_gb": 110.0, "total_gb": 200.0, "status": "ok"},
+  "pipelines": [],
+  "network_table": {}
+}
 ```
 
-Uses `psutil` to sample CPU and RAM usage every 1.5 seconds, and queries GPU utilization if available. Pushes a `system_status` event with the reading.
+CPU temperature is read from `/sys/class/thermal/thermal_zone*/temp` when available, otherwise from `psutil` sensors, and may be `null`.
 
 ## Pipeline error events
 
-Pipeline threads call `web_interface.publish_pipeline_error(pipeline_name, operation, traceback_str)`. A deduplication mechanism (`_pipeline_error_dirty_pipelines`, `_pipeline_error_last_seq_sent`) ensures each unique error is only sent once per sequence number, reducing SSE noise during repeated errors.
+Pipeline construction and config writes populate an error cache. `_publish_cached_pipeline_errors` uses `_pipeline_error_dirty_pipelines` and `_pipeline_error_last_seq_sent` so each unique error is sent once per sequence number, and re-sends the whole cache when a new SSE client connects.
 
 ## Pipeline profiling events
 
-`FlowManager._record_profile_snapshot()` captures per-operation and per-timestep wall-clock runtimes after each frame. The profiling snapshot is stored under a lock. A background behavior in the pipeline thread reads the latest snapshot every 300 ms and publishes it via `publish_pipeline_profile()`.
+`FlowManager._record_profile_snapshot()` captures per-operation and per-timestep wall-clock runtimes after each frame and stores the latest snapshot under a lock. `_publish_profiling_updates` reads `pipeline.get_latest_profile_snapshot()` for every pipeline, skips snapshots whose `frame_seq` is not greater than the last sent, and emits `profiling_update`.
 
 ### Profiling snapshot shape
 
@@ -96,11 +105,4 @@ Pipeline threads call `web_interface.publish_pipeline_error(pipeline_name, opera
 
 ## CORS
 
-The SSE endpoint includes permissive CORS headers:
-
-```
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Headers: Cache-Control
-```
-
-This allows the Vite dev server (running on a different port) to connect during development. In production, all traffic is on the same origin (`localhost:5001`).
+`CORS_ALLOWED_ORIGINS` in `src/webui/web_server_utils/constants.py` is `"*"`, so any origin may connect. This allows the Vite dev server on another port to reach the backend during development; in production the UI and API share `http://<host>:5001`.

@@ -19,7 +19,7 @@ When a pipeline is built, each `action_name` is resolved in this order:
 1. `src/main_operations/definitions/<name>` — class named `<CamelCase>Definition`
 2. `src/secondary_operations/<name>` — class named `<CamelCase>` (no `Definition` suffix)
 
-The `.py` extension is stripped before the class name is derived, so `detect_apriltags.py` maps to `DetectApriltags` in secondary ops or `DetectApriltags` in main ops.
+The `.py` extension is stripped before the class name is derived, so `detect_apriltags.py` maps to `DetectApriltagsDefinition` in main operations. A secondary operation such as `tag_filter.py` maps to `TagFilter`.
 
 ## Dependency injection
 
@@ -28,10 +28,13 @@ These parameters are automatically passed to any operation constructor that decl
 | Parameter | Type |
 |---|---|
 | `web_interface` | `EagleEyeInterface` |
-| `compute_pool` | `ComputePool` |
 | `network_table` | `NetworkTable` |
 | `camera_manager` | `CameraThreadManager` |
 | `camera_config_registry` | `CameraConfigRegistry` |
+| `camera_configs` | `dict[str, CameraConfig]` |
+| `device_registry` | `DeviceRegistry` |
+| `model_library` | `ModelLibrary` |
+| `mx3_coordinator` | `Mx3RuntimeCoordinator` (may be `None`) |
 | `logger` | `Logger` |
 
 ## Execution scheduling
@@ -42,10 +45,10 @@ See [Flow Manager](./flow-manager) for details.
 
 ## Profiling
 
-Every frame, `FlowManager` records a profiling snapshot with per-operation and per-timestep wall-clock runtimes. These snapshots are published to the frontend via the SSE `pipeline_profile` event every 300 ms and displayed in the Pipeline Editor.
+Every frame, `FlowManager` records a profiling snapshot with per-operation and per-timestep wall-clock runtimes. The WebUI heartbeat thread publishes new snapshots as SSE `profiling_update` events at most every 300 ms per pipeline.
 
 ## Debugging
 
 - Set `debug_mode = True` in `src/config/utils/pipeline.py` to enable verbose per-op timing to stdout.
-- Pipeline errors are published via SSE `pipeline_error` events and shown as red indicators in the Pipeline Editor.
+- Pipeline construction and runtime errors are cached and sent as SSE `pipeline_operation_errors` events, shown as red indicators in the Pipeline Editor.
 - Check backend logs for `ImportError` (wrong class name) or `ValueError` (no thread available) during pipeline construction.

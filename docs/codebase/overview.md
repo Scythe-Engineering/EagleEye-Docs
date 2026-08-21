@@ -20,20 +20,23 @@ EagleEye-Vision-System/
 │   │   └── definitions/             # Main operation wrappers + config_data/
 │   │       └── base/base_class.py   # OperationInstance base class
 │   ├── secondary_operations/        # Lightweight secondary ops + config_data/
-│   ├── modules/                     # Heavy implementation modules (ONNX, etc.)
+│   ├── main_operations/modules/     # Heavy implementation modules (ONNX, etc.)
 │   ├── rust_implementations/        # PyO3 Rust modules + build.py
 │   ├── utils/
 │   │   ├── camera_utils/            # CameraThreadManager, CameraWorker, configs
-│   │   ├── device_management_utils/ # ComputePool, CPU, GPU, MX3Accelerator
-│   │   ├── flatpack_schema/         # Binary serialization for NT output
+│   │   ├── device_registry.py       # Immutable cpu/cuda:N/mx3:N inventory
+│   │   ├── model_library.py         # Managed model metadata and artifacts
+│   │   ├── mx3_runtime.py           # Shared MemryX runtime coordinator
+│   │   ├── flatpack_schema/         # Standalone schema utilities (not live NT output)
 │   │   ├── logging/                 # Logger class
 │   │   └── field_data/              # FRC field JSON files
 │   └── webui/
-│       ├── web_server.py            # Flask/SocketIO server (EagleEyeInterface)
-│       ├── assets/                  # Static assets (no-image PNG, favicon, robots)
-│       ├── js/                      # Built frontend JS (output of npm run build)
-│       ├── style.css                # Built frontend CSS
-│       └── web_server_utils/        # Static file helpers, Draco loader
+│       ├── web_server.py            # Flask server and SSE (EagleEyeInterface)
+│       ├── assets/                  # Static assets (camera, robot, and field assets)
+│       ├── html/tabs/               # UI tab partials
+│       ├── js/                      # Frontend source modules
+│       ├── static/                  # Vite build output
+│       └── web_server_utils/        # Route mixins, static helpers, Draco loader
 ├── tests/                           # pytest test suite
 ├── eagleeye.service                 # systemd service file
 └── pyproject.toml                   # uv/Python project config
@@ -68,20 +71,21 @@ FlowManager.run_flow()
 | `src/config/utils/generate_all_pipelines.py` | Reads `pipeline_config.json`, builds `Pipeline` objects |
 | `src/config/utils/pipeline.py` | Wraps `FlowManager`; owns per-pipeline thread |
 | `src/config/utils/flow_manager.py` | Topological sort, thread allocation, profiling |
-| `src/utils/device_management_utils/compute_pool.py` | Device registry, lookup by ID |
-| `src/webui/web_server.py` | Flask routes, SSE events, custom ops editor |
+| `src/utils/device_registry.py` | Immutable startup device inventory |
+| `src/utils/model_library.py` | Managed model metadata and artifact resolution |
+| `src/webui/web_server.py` | Flask routes and SSE events |
 | `src/utils/camera_utils/camera_thread_manager.py` | Camera thread lifecycle |
-| `src/utils/flatpack_schema/schema_manifest.py` | Binary NT schema publication |
+| `src/utils/flatpack_schema/schema_manifest.py` | Standalone schema-manifest utility (not published at runtime) |
 
 ## Thread model
 
 | Thread | Owner | Role |
 |---|---|---|
 | Main thread | `main_backend.py` | Runs `while True: sleep(1)` to keep the process alive |
-| Flask daemon thread | `EagleEyeInterface` | Serves HTTP/WebSocket on port 5001 |
+| Flask daemon thread | `EagleEyeInterface` | Serves HTTP and SSE on port 5001 |
 | SSE heartbeat thread | `EagleEyeInterface` | Sends heartbeat every 5 s |
 | Log monitor thread | `EagleEyeInterface` | Polls logger for new messages → SSE |
-| System status thread | `EagleEyeInterface` | Publishes CPU/RAM/GPU stats every 1.5 s → SSE |
+| System status thread | `EagleEyeInterface` | Publishes CPU, memory, storage, pipeline, and NetworkTables status every 1.5 s → SSE |
 | Camera worker threads | `CameraThreadManager` | One per camera; calls `camera.get_frame()` in a loop |
 | Pipeline threads | `Pipeline.thread_run()` | One per pipeline; drives `FlowManager.run_flow()` each frame |
 | Operation threads | `FlowManager` | One per parallel branch; run concurrently when `num_threads > 1` |

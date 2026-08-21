@@ -10,8 +10,9 @@ import { themes as prismThemes } from "prism-react-renderer";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "EagleEye Vision Docs",
-  tagline: "Concise docs for pipelines, devices, and the WebUI.",
+  title: "EagleEye",
+  tagline:
+    "FRC vision that gets your robot pose on NetworkTables. Install it, point a camera at an AprilTag, and go.",
   favicon: "img/favicon.ico",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -20,15 +21,17 @@ const config = {
   },
 
   // Set the production url of your site here
-  url: "http://localhost",
+  url: "https://scythe-engineering.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/",
+  baseUrl: "/EagleEye-Docs/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "EagleEye",
-  projectName: "vision-docs",
+  organizationName: "Scythe-Engineering",
+  projectName: "EagleEye-Docs",
+  deploymentBranch: "gh-pages",
+  trailingSlash: false,
 
   onBrokenLinks: "throw",
 
@@ -60,17 +63,23 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      image: "img/docusaurus-social-card.jpg",
+      image: "img/ui-screenshots/pipeline-tab.png",
+      metadata: [
+        {
+          name: "description",
+          content:
+            "Operator docs for EagleEye, the FRC vision system: install it, set up an AprilTag pipeline, and publish robot pose to NetworkTables.",
+        },
+      ],
       colorMode: {
         defaultMode: "dark",
         disableSwitch: true,
         respectPrefersColorScheme: false,
       },
       navbar: {
-        title: "EagleEye Vision",
+        title: "EagleEye",
         logo: {
-          alt: "EagleEye Vision Logo",
+          alt: "EagleEye logo",
           src: "img/favicon.ico",
         },
         items: [
@@ -84,7 +93,7 @@ const config = {
             type: "docSidebar",
             sidebarId: "codebaseDocs",
             position: "left",
-            label: "Codebase Docs",
+            label: "Developer Docs",
           },
           {
             href: "https://github.com/Scythe-Engineering/EagleEye-Vision-System",
@@ -104,7 +113,7 @@ const config = {
                 to: "/docs/user-guide/overview",
               },
               {
-                label: "Codebase Docs",
+                label: "Developer Docs",
                 to: "/docs/codebase/overview",
               },
             ],
@@ -117,13 +126,13 @@ const config = {
                 href: "https://github.com/Scythe-Engineering/EagleEye-Vision-System",
               },
               {
-                label: "Built with Docusaurus",
-                href: "https://docusaurus.io/",
+                label: "Troubleshooting",
+                to: "/docs/user-guide/troubleshooting",
               },
             ],
           },
         ],
-        copyright: `© ${new Date().getFullYear()} EagleEye Vision — streamlined docs built with Docusaurus.`,
+        copyright: `© ${new Date().getFullYear()} Scythe Engineering — EagleEye Vision System.`,
       },
       prism: {
         theme: prismThemes.github,

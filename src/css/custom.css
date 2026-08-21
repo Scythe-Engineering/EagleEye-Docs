@@ -157,3 +157,92 @@ body {
 .table-of-contents__left-border {
   border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* Table styling */
+.theme-doc-markdown table,
+main table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.theme-doc-markdown thead,
+main thead {
+  background: linear-gradient(180deg, rgba(249, 200, 74, 0.18) 0%, rgba(249, 200, 74, 0.08) 100%);
+}
+
+.theme-doc-markdown thead th:first-child,
+main thead th:first-child {
+  border-top-left-radius: 7px;
+  border-left: none;
+}
+
+.theme-doc-markdown thead th:last-child,
+main thead th:last-child {
+  border-top-right-radius: 7px;
+  border-right: none;
+}
+
+.theme-doc-markdown thead th,
+main thead th {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  text-align: left;
+  color: #f9d162;
+  border-bottom: 1px solid rgba(249, 200, 74, 0.25);
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+}
+
+.theme-doc-markdown tbody tr,
+main tbody tr {
+  background: rgba(22, 27, 37, 0.6);
+  transition: background 0.15s ease;
+}
+
+.theme-doc-markdown tbody tr:nth-child(even),
+main tbody tr:nth-child(even) {
+  background: rgba(19, 23, 34, 0.8);
+}
+
+.theme-doc-markdown tbody tr:hover,
+main tbody tr:hover {
+  background: rgba(32, 38, 50, 0.9);
+}
+
+.theme-doc-markdown tbody td,
+main tbody td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.9rem;
+  color: #e5e7eb;
+}
+
+.theme-doc-markdown tbody td:first-child,
+main tbody td:first-child {
+  font-weight: 500;
+  color: #d1d5db;
+}
+
+.theme-doc-markdown tbody tr:last-child td:first-child,
+main tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 7px;
+}
+
+.theme-doc-markdown tbody tr:last-child td:last-child,
+main tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 7px;
+}
+
+/* Markdown content images: rounded corners + neomorphic shadow */
+.theme-doc-markdown img {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    16px 16px 32px rgba(0, 0, 0, 0.5),
+    -8px -8px 24px rgba(255, 255, 255, 0.05);
+}

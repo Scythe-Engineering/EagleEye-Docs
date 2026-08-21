@@ -1,112 +1,35 @@
 # Adding a New UI Tab
 
-To add a new tab to the WebUI, you need four things: a Handlebars partial for the HTML, an ES6 JS module, a sidebar entry in the tab navigation, and optionally a new backend API route.
+The current frontend uses HTML partials under `src/webui/html/tabs/`, ES modules under `src/webui/js/`, and the sidebar markup in `src/webui/index.html`.
 
-## 1. Create a Handlebars partial
+## 1. Add markup
 
-**`src/webui/partials/my-tab.hbs`:**
+Create `src/webui/html/tabs/my_tab_content.html`. Add its Handlebars partial include and matching tab button/content ID in `src/webui/index.html`, following an existing tab. `vite.config.js` already registers both `html/tabs` and `html/partials` as partial directories.
 
-```handlebars
-<div id="my-tab" class="tab-content hidden">
-  <div class="p-4">
-    <h2 class="text-xl font-semibold mb-4">My Tab</h2>
-    <div id="my-tab-content">
-      <!-- Tab content here -->
-    </div>
-  </div>
-</div>
-```
+## 2. Add JavaScript
 
-Register the partial in your Vite/Handlebars config (in `vite.config.js`):
+Create a module under `src/webui/js/` and import/initialize it from `src/webui/js/main.js`. Follow the existing sidebar/tab-routing conventions rather than adding inline `onclick` handlers.
 
-```js
-handlebars({
-  partialDirectory: resolve(__dirname, 'partials'),
-})
-```
+Use `fetch()` for request/response APIs. For live updates, attach a named listener to the existing `EventSource` for `/sse/stream`; do not open a second real-time channel unless the backend feature requires one.
 
-Include it in `index.hbs`:
+## 3. Add a backend endpoint when needed
 
-```handlebars
-{{> my-tab}}
-```
-
-## 2. Create a JS module
-
-**`src/webui/js/my-tab/index.js`:**
-
-```js
-export function initMyTab() {
-  const container = document.getElementById('my-tab-content');
-
-  async function loadData() {
-    const res = await fetch('/my-endpoint');
-    const data = await res.json();
-    render(container, data);
-  }
-
-  function render(container, data) {
-    container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-  }
-
-  loadData();
-}
-```
-
-Import and call `initMyTab()` from `main.js`:
-
-```js
-import { initMyTab } from './my-tab/index.js';
-
-// In the initialization block:
-initMyTab();
-```
-
-## 3. Add a sidebar navigation entry
-
-In the sidebar HTML (inside `index.hbs` or a sidebar partial), add a tab button:
-
-```handlebars
-<button
-  class="sidebar-tab"
-  data-target="my-tab"
-  onclick="switchTab('my-tab')"
->
-  My Tab
-</button>
-```
-
-The `switchTab()` function (defined in the shared UI module) shows/hides tab content divs based on the `data-target` attribute.
-
-## 4. Add a backend route (optional)
-
-If your tab needs server-side data, add a route in `web_server.py`:
+Route registration is centralized in `EagleEyeInterface._register_routes()` (`src/webui/web_server.py`) with `add_url_rule`. Put a handler in the appropriate `src/webui/web_server_utils/*_mixin.py` mixin (or add a focused mixin), then register it there.
 
 ```python
 self.app.add_url_rule(
-    "/my-endpoint",
-    "my_endpoint",
-    self.my_endpoint_handler,
-    methods=["GET"],
+    "/my-endpoint", "my_endpoint", self.my_endpoint_handler, methods=["GET"]
 )
 ```
 
-```python
-def my_endpoint_handler(self) -> tuple[dict, int]:
-    return {"data": "hello"}, 200
-```
+The production backend is served at `http://<host>:5001`; use relative URLs in frontend code.
 
-## 5. Rebuild the frontend
+## 4. Build
+
+From the repository root:
 
 ```bash
-cd src/webui
 npm run build
 ```
 
-The new tab is live after the build completes. No backend restart needed (the Flask server serves the updated static files immediately on the next request).
-
-## Styling notes
-
-- Use Tailwind utility classes for layout and spacing.
-- Dark theme colors: background `#1a1a1a`, surface `#242424`, accent `#f9c84a`.
-- Custom styles for complex components go in `src/webui/css/`.
+Vite builds from `src/webui` into `src/webui/static/`; Flask serves the generated UI through `/`, `/js/main.js`, `/style.css`, and `/assets/<path>`. A running production backend may need its static files refreshed/restarted according to deployment practice; `npm run dev` is for frontend development.

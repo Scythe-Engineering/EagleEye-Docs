@@ -6,7 +6,7 @@ Secondary operations live in `src/secondary_operations/` as single-file, lightwe
 
 - Operation logic fits in a single file (under ~200 lines).
 - No heavy model loading, no separate module directory needed.
-- Can also be written and edited in-browser via the **Custom Ops** tab in the WebUI.
+- Source is added and edited in the repository; the WebUI does not edit operation source.
 
 ## Pattern
 
@@ -23,57 +23,58 @@ class MySecondaryOp(OperationInstance):
         return input_data
 ```
 
-The class name is `CamelCase` derived from the snake_case file name (e.g. `velocity_based_filtering.py` → `VelocityBasedFiltering`).
+The class name is `CamelCase` derived from the snake_case file name, such as `tag_filter.py` to `TagFilter`.
 
 ## Bundled secondary operations
 
-| File | Class | Description |
+| File | Class | Purpose |
 |---|---|---|
-| `device_input.py` | `DeviceInput` | Data-source node that reads frames from a camera by `bus_id` |
-| `detect_apriltags.py` | `DetectApriltags` | Runs the `pupil-apriltags` detector on a frame |
-| `pnp_camera_localization.py` | `PnpCameraLocalization` | Solves PnP using tag detections + map, returns 3D camera pose |
-| `flatten_pose.py` | `FlattenPose` | Drops the height/pitch/roll components, returns a 2D pose |
-| `robot_pose_output.py` | `RobotPoseOutput` | Publishes robot pose to NetworkTables |
-| `fps_limiter.py` | `FpsLimiter` | Throttles downstream processing to a target FPS |
-| `velocity_based_filtering.py` | `VelocityBasedFiltering` | Rejects pose outliers using MAD-based velocity filtering |
-| `temporal_acceleration_preprocessor_rust.py` | `TemporalAccelerationPreprocessorRust` | Rust-backed temporal region-of-interest preprocessor |
-| `dynamic_pose_group_test.py` | `DynamicPoseGroupTest` | Development/test operation for multi-input pose comparison |
+| `angle_to_objects.py` | `AngleToObjects` | Calculates horizontal angles to detections |
+| `camera_adjust.py` | `CameraAdjust` | Applies camera brightness, contrast, saturation, gain, and exposure settings |
+| `camera_local_to_robot_transform.py` | `CameraLocalToRobotTransform` | Converts camera-local detections to robot coordinates |
+| `camera_pose_output.py` | `CameraPoseOutput` | Sends camera poses to the WebUI |
+| `camera_to_robot_pose.py` | `CameraToRobotPose` | Applies camera extrinsics to produce robot pose |
+| `detected_objects_output.py` | `DetectedObjectsOutput` | Sends detected objects to the WebUI |
+| `device_input.py` | `DeviceInput` | Reads frames from a camera by `camera_bus_id` |
+| `extract_pose.py` | `ExtractPose` | Extracts 2D pose data from a transform |
+| `flatten_pose.py` | `FlattenPose` | Removes height and 3D rotation components |
+| `get_networktables_value.py` | `GetNetworktablesValue` | Reads a NetworkTables value |
+| `ground_plane_intersection.py` | `GroundPlaneIntersection` | Projects detections onto the ground plane |
+| `minimum_apriltag_count.py` | `MinimumApriltagCount` | Rejects frames with too few AprilTags |
+| `pose_fusion.py` | `PoseFusion` | Combines pose estimates with outlier rejection |
+| `pose_outlier_filter_rust.py` | `PoseOutlierFilterRust` | Filters pose outliers using predictive gating |
+| `publish_to_networktables.py` | `PublishToNetworktables` | Publishes typed values to NetworkTables |
+| `robot_local_to_field_transform.py` | `RobotLocalToFieldTransform` | Converts robot-local detections to field coordinates |
+| `robot_pose_output.py` | `RobotPoseOutput` | Sends robot pose to the WebUI |
+| `tag_filter.py` | `TagFilter` | Includes or excludes detections by AprilTag ID |
 
 ## Config definitions
 
-Each secondary operation must have a matching config definition JSON at:
+Each secondary operation needs a matching config definition:
 
 ```
 src/secondary_operations/config_data/<name>_config_def.json
 ```
 
-Example for `velocity_based_filtering.py`:
+For example, `minimum_apriltag_count_config_def.json` names the class, ports, category, and settings used by the pipeline editor:
 
 ```json
 {
-  "class_name": "VelocityBasedFiltering",
-  "description": "Filters pose estimates using MAD-based velocity rejection",
+  "class_name": "MinimumApriltagCount",
   "category": "filt",
-  "input_nodes": [
-    {"name": "poses", "has_default": false}
-  ],
-  "output_nodes": ["filtered_poses"],
+  "input_nodes": [{"name": "detections", "has_default": false}],
+  "output_nodes": ["detections"],
   "parameters": {
-    "velocity_mad_multiplier": {
-      "type": "float",
-      "description": "Outlier rejection multiplier",
-      "default": 3.0,
-      "min": 1.0,
-      "max": 10.0
+    "minimum_detections": {
+      "type": "int",
+      "default": 2,
+      "required": false
     }
   }
 }
 ```
 
-## Custom operations via WebUI
-
-The **Custom Ops** tab in the WebUI provides a CodeMirror editor to create, edit, and lint secondary operations directly in the browser. Saving a custom op writes atomically to `src/secondary_operations/<name>.py` and its config JSON, and sets the `restart_required` flag. See [Custom Ops](../../user-guide/webui-usage#custom-ops-tab) in the User Guide for the workflow.
 
 ## Promoting to a main operation
 
-If a secondary operation grows complex enough to warrant its own module or requires separate test coverage, move it to `src/main_operations/definitions/<name>.py` (rename the class to `<Name>Definition`) and create an implementation module under `src/modules/<name>/`.
+If a secondary operation grows complex enough to warrant its own module or requires separate test coverage, move it to `src/main_operations/definitions/<name>.py` (rename the class to `<Name>Definition`) and create an implementation module under `src/main_operations/modules/<name>/`.

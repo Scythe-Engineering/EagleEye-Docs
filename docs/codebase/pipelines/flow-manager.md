@@ -74,5 +74,5 @@ Snapshots are stored under `_profile_lock` and read by `get_latest_profile_snaps
 ## Error handling
 
 - `TypeError` with `"None"` in the message → silently skip the current frame (operation received `None` input; expected on first frame for temporal connections).
-- Other exceptions → call `on_operation_error` callback (publishes SSE error event) and raise `ValueError`.
+- Other exceptions → call `on_operation_error` to record the error for later SSE publication, then raise `ValueError`.
 - Thread timeout (5 s) → reset thread state and raise `ValueError`.

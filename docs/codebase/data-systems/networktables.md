@@ -5,66 +5,62 @@ EagleEye publishes vision data to a NetworkTables table named `EagleEye`. Robot 
 ## Initialization
 
 ```python
-from networktables import NetworkTables
+import ntcore
 
-NetworkTables.initialize(server=general_conf["network_table_address"])
-network_table = NetworkTables.getTable("EagleEye")
+network_tables_inst = ntcore.NetworkTableInstance.getDefault()
+network_tables_inst.startClient4("EagleEye")
+network_tables_inst.setServer(general_conf["network_table_address"])
+network_table = network_tables_inst.getTable("EagleEye")
 ```
 
-The server address comes from `src/general_conf.json`. Set to `0.0.0.0` to disable NT publishing (useful when testing without a robot).
+EagleEye is an NT4 **client** identified as `EagleEye`; the host at the configured address (normally the roboRIO) is the server. The server address comes from `src/general_conf.json`. The tracked installation config uses `localhost`; the code fallback is `0.0.0.0` when that file is absent.
 
-## Schema manifest
+## Publishing from operations
 
-At startup, the binary schema manifest is published to:
+Operations that output to NetworkTables receive the `network_table` handle by dependency injection — do not list it in `action_params`.
 
-```
-EagleEye/schema_manifest  →  raw bytes (FPKM format)
-```
+The general-purpose publisher is `src/secondary_operations/publish_to_networktables.py` (`PublishToNetworktables`). Its parameters are:
 
-This allows dashboards (SmartDashboard, Elastic) and robot code to discover which data types EagleEye is publishing. See [Flatpack Schema](./flatpack-schema) for the manifest format.
+| Parameter | Meaning |
+|---|---|
+| `target_key` | Entry key under `EagleEye/` |
+| `schema` | `auto` (detect from the value's shape) or a forced type such as `pose3d`, `pose2d`, `transform3d`, `translation2d`, `rotation2d`, `double`, `boolean`, `string` |
+| `data_path` | Optional list of keys/indices selecting a nested value out of the upstream data |
 
-## Pipeline data
+Values are converted to wpimath geometry types (`Pose2d`, `Pose3d`, `Translation2d`, `Translation3d`, `Transform2d`, `Transform3d`, `Rotation2d`, `Rotation3d`) or to plain floats, booleans, strings, and lists thereof. A 4×4 numpy matrix is converted to a pose, with the camera EDN axes rotated into WPILib NWU.
 
-Operations that output data to NetworkTables (e.g. `robot_pose_output.py`) receive the `network_table` handle via dependency injection and publish directly:
+The topic type is chosen from the converted value the first time it publishes:
 
 ```python
-class RobotPoseOutput(OperationInstance):
-    def __init__(self, network_table) -> None:
-        self.network_table = network_table
-
-    def run(self, pose_2d):
-        if pose_2d is None:
-            return None
-        # Serialize and publish
-        payload = flatpack_serialize(pose_2d)
-        self.network_table.putRaw("pose2d", payload)
-        return pose_2d
+self.network_table.getStructTopic(self.target_key, type(wpi_value)).publish()
+# or getStructArrayTopic / getDoubleTopic / getDoubleArrayTopic
+# / getBooleanTopic / getBooleanArrayTopic / getStringTopic / getStringArrayTopic
 ```
 
-The `network_table` parameter is automatically injected — do not include it in `action_params`.
+Each sample is published with its source frame's capture time:
 
-## Table layout (example)
+```python
+self._publisher.set(wpi_value, timing.capture_nt_us)
+```
+
+`capture_nt_us` travels with the value through the pipeline in `TimingMetadata`, so robot code sees the time the frame was captured rather than the time it was published.
+
+Not every output operation uses NetworkTables — for example `robot_pose_output.py` takes `web_interface` and only forwards the pose to the WebUI 3D view.
+
+## Table layout
 
 ```
 EagleEye/
-├── schema_manifest         ← binary FPKM manifest (published at startup)
-├── pose2d                  ← robot 2D pose from active pipeline
-├── pose3d                  ← camera 3D pose (optional)
-└── ...                     ← additional keys published by your operations
+├── <target_key>   ← one topic per publish_to_networktables operation
+└── ...
 ```
 
-Key names are determined by the individual operations that publish them. There is no enforced schema for key names — they are whatever the operation writes.
-
-## Per-pipeline enable/disable
-
-The Settings tab in the WebUI allows individual pipelines to be enabled or disabled for NT output. When a pipeline is disabled, its operations still run (for WebUI display), but they do not write to NetworkTables.
-
-This is managed by a flag on the `Pipeline` object that operations can check via the `web_interface` injection.
+Key names are entirely determined by the `target_key` of each publishing operation; there is no enforced naming scheme, and no schema manifest is published.
 
 ## NT server address changes
 
-The NT server address is stored in `src/general_conf.json` and is editable via `POST /save-general-conf`. Changes take effect after restarting the backend — NT must be re-initialized with the new server address.
+The address lives in `src/general_conf.json` and is editable through `POST /save-general-conf`. Changes take effect after a backend restart, since the NT client is configured once during startup.
 
 ## Testing without a robot
 
-During development, set the NT address to `0.0.0.0`. EagleEye starts normally; NT calls are no-ops or connect to a local NT server. Use `ntcore-server` or Glass (WPILib) to run a local NT server for integration testing.
+Leave the tracked address at `localhost`, or point it at another locally running NT4 server (for example WPILib Glass or a simulation) for integration testing.

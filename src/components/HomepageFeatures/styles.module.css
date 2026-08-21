@@ -29,3 +29,10 @@
   color: #f9c84a;
   font-weight: 600;
 }
+
+.devNote {
+  margin: 1.75rem 0 0;
+  text-align: center;
+  color: #8f9bad;
+  font-size: 0.95rem;
+}

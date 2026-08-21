@@ -1,64 +1,46 @@
-# Device Implementations
+# Device Types
 
-All device classes subclass `ComputeDevice` from `src/utils/device_management_utils/compute_device.py`. The base class enforces `device_id` and `device_type` attributes and declares `load_model()`, `run()`, and `stop()` as the interface.
-
-## CPU (`cpu.py`)
-
-- **Device ID:** `CPU`
-- **Backend:** ONNX Runtime with the CPU Execution Provider
-- **Models:** Standard ONNX files
-- **Use when:** No GPU or MX3 available, or for lightweight operations
-
-CPU is always available. All non-device-specific ONNX inference falls back to CPU when other devices are absent.
-
-## GPU (`gpu.py`)
-
-- **Device ID:** `GPU_0`, `GPU_1`, etc. (indexed by CUDA device order)
-- **Backend:** ONNX Runtime with CUDA Execution Provider (or PyTorch, depending on operation)
-- **Models:** ONNX files compiled for CUDA, or PyTorch `.pt` / `.pth`
-- **Requirements:** NVIDIA driver, CUDA toolkit, `onnxruntime-gpu` or `torch` with CUDA
-
-GPU devices are registered in `MainBackend._initialize_gpu_devices()`:
+Devices are described by `DeviceDescriptor`, a frozen dataclass in `src/utils/device_registry.py`:
 
 ```python
-for gpu_index, gpu_device_name in enumerate(gpu_devices):
-    gpu_device = GPU(device_id=f"GPU_{gpu_index}")
-    self.compute_pool.add_compute_device(gpu_device)
+@dataclass(frozen=True, slots=True)
+class DeviceDescriptor:
+    device_id: str        # canonical ID, e.g. "cpu", "cuda:0", "mx3:0"
+    display_name: str     # human-readable hardware label
+    device_type: str      # "cpu", "cuda", or "mx3"
+    physical_index: int | None  # None for CPU
 ```
 
-`get_available_devices()` uses CUDA device enumeration to discover GPUs. If CUDA is unavailable, no GPU devices are registered.
+The descriptor carries no execution methods. How a model actually runs is decided by the operation that uses the device ID.
 
-## MX3 Accelerator (`mx3_accelerator.py`)
+## CPU
 
-- **Device ID:** `MX3_0`, `MX3_1`, etc. (indexed from `memx:0`, `memx:1`)
-- **Backend:** MemryX `MultiStreamAsyncAccl`
-- **Models:** ONNX models compiled for MX3 (via the Memryx compiler toolchain)
-- **Requirements:** MemryX SDK and PCIe/USB driver
+- **ID:** `cpu`
+- **Display name:** `platform.processor()`, falling back to `"CPU"`
+- **Artifacts:** `ModelLibrary.resolve_artifact` prefers `onnx`, then `pt`
 
-MX3 devices are registered in `MainBackend._initialize_tpu_devices()`:
+CPU is always present in the inventory, on every platform.
 
-```python
-for tpu_device in tpu_devices:
-    # tpu_device is e.g. "memx:0"
-    device_index = tpu_device.split(":", 1)[1]
-    mx3_device = MX3Accelerator(device_id=f"MX3_{device_index}", logger=self.logger)
-    self.compute_pool.add_compute_device(mx3_device)
-```
+## CUDA
 
-The MX3 logger is set via `set_mx3_logger(logger)` so MX3 internal messages flow through the EagleEye log system.
+- **IDs:** `cuda:0`, `cuda:1`, … in `torch.cuda` enumeration order
+- **Display name:** `torch.cuda.get_device_name(index)`
+- **Artifacts:** preference order `engine` (TensorRT), then `pt`, then `onnx`
+- **Requirements:** NVIDIA driver plus a CUDA-enabled `torch` build
 
-## Base class interface
+Discovery imports `torch` lazily. `ImportError`, `RuntimeError`, and `OSError` are caught and logged, and the inventory continues with no CUDA entries.
 
-```python
-from src.utils.device_management_utils.compute_device import ComputeDevice
+## MemryX MX3
 
-class ComputeDevice:
-    device_id: str
-    device_type: str
+- **IDs:** `mx3:0`, `mx3:1`, … taken from the `/dev/memxN` node number
+- **Display name:** `MemryX MX3 (/dev/memxN)`
+- **Artifacts:** requires an `mx3_dfp` artifact and `mx3_profile` metadata on the model record; an optional `mx3_postprocessor` artifact is returned alongside it
+- **Requirements:** MemryX SDK and driver providing `/dev/memx*`
 
-    def load_model(self, model_path: str) -> None: ...
-    def run(self, input_data) -> Any: ...
-    def stop(self) -> None: ...
-```
+Node discovery uses `glob.glob("/dev/memx[0-9]*")` and only runs when `os.name == "posix"`. Devices are sorted by index so the inventory is deterministic.
 
-For adding a new device type, see [New Device](../extension-points/new-device).
+Execution on MX3 is not performed by the descriptor. `Mx3RuntimeCoordinator` owns one runtime per physical device and hands operations an `Mx3StreamBinding`, which feeds frames through `input_callback`/`output_callback` and yields `Mx3ResultPacket` values.
+
+## Testing hooks
+
+`DeviceRegistry.discover` accepts `cuda_devices` and `mx3_paths` keyword arguments so tests can build a deterministic inventory without hardware.
