@@ -345,10 +345,11 @@ numbers. See [Configure Extrinsics](./configure-extrinsics).
 
 ### Calibration tool
 
-![The built-in camera intrinsics calibration tool](/img/ui-screenshots/utils-calibration-modal.png)
+![Live ChArUco detections, captured calibration frames, and corner coverage](/img/ui-screenshots/calibration-live-coverage.png)
 
-Live feed, board settings (**Squares X**, **Squares Y**, **Square m**, **Marker m**), a live
-resolution selector for the preview, a status line, **Capture** / **Reset** / **Calibrate & Save** buttons, a progress readout, and a list of captured frames. Walkthrough:
+Live feed with detected corners, board settings (**Squares X**, **Squares Y**, **Square m**,
+**Marker m**), a preview-resolution selector, **Capture**, **Reset**, and **Calibrate & Save**
+buttons, saved-frame thumbnails, and a corner-coverage plot. Walkthrough:
 [Calibrate Intrinsics](./calibrate-intrinsics).
 
 :::note
