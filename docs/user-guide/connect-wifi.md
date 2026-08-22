@@ -74,3 +74,18 @@ connected devices; in that case, keep managing the Pi over Ethernet and use the 
 method above.
 
 Next: [Install EagleEye](./install).
+
+## Connect from the web UI after installation
+
+Once EagleEye is running, you do not need SSH or `nmcli` to change Wi-Fi networks:
+
+1. Open the **Settings** tab from the navigation on the right.
+2. Find **WiFi Networks** under **General** and click **Manage**.
+3. Click **Refresh** if the network is missing.
+4. Find the network, enter its password, and click **Connect**.
+
+![Network Manager in the Settings tab with the network name pixelated](/img/ui-screenshots/wifi-manager.png)
+
+The active network has a green **Connected** label. Its action button changes to
+**Disconnect**. Keep Ethernet connected until the Wi-Fi row shows **Connected**, especially
+if the browser is using the Ethernet address.

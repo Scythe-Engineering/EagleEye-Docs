@@ -20,9 +20,10 @@ look perfect in the UI and send nothing to your robot.
 1. Open the **Settings** tab.
 2. Under **Network Table**, set the robot address.
 3. Click **Save Settings**.
-4. Click **Restart Backend**.
+4. In the same **Settings** tab, click **Restart Backend** at the bottom of the
+   **Backend Settings** panel.
 
-![Settings tab](/img/ui-screenshots/settings-tab.png)
+![Restart Backend and Reboot Computer controls in the Settings tab](/img/ui-screenshots/settings-restart-controls.png)
 
 A fresh install starts with `localhost`; replace it before using a real robot.
 For a real robot use one of:

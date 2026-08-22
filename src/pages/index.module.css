@@ -67,8 +67,7 @@
 }
 
 .screenshotSection {
-  padding: 1rem 0 4rem 0;
-  text-align: center;
+  padding: 1rem 0 4rem;
 }
 
 .sectionTitle {
@@ -79,23 +78,69 @@
 .sectionBody {
   color: #cdd4e0;
   max-width: 720px;
-  margin: 0 auto 2rem auto;
+  margin: 0 0 2rem;
   line-height: 1.6;
 }
 
-.screenshot {
-  width: 100%;
-  max-width: 960px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    16px 16px 32px rgba(0, 0, 0, 0.5),
-    -8px -8px 24px rgba(255, 255, 255, 0.05);
+.showcaseGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-.sectionLink {
-  display: inline-block;
-  margin-top: 1.5rem;
+.showcaseCard {
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #161b25;
+  color: inherit;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.showcaseCard:hover {
+  color: inherit;
+  text-decoration: none;
+  border-color: rgba(249, 200, 74, 0.55);
+  transform: translateY(-2px);
+}
+
+.showcaseFrame {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0b0e13;
+}
+
+.showcaseFrame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.showcaseCopy {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.showcaseCopy h3 {
+  margin: 0 0 0.35rem;
   color: #f9c84a;
-  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.showcaseCopy p {
+  margin: 0;
+  color: #cdd4e0;
+  line-height: 1.5;
+}
+
+@media screen and (max-width: 996px) {
+  .showcaseGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media screen and (max-width: 650px) {
+  .showcaseGrid {
+    grid-template-columns: 1fr;
+  }
 }

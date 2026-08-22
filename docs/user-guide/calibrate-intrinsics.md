@@ -39,15 +39,13 @@ Tape the board flat to a rigid, flat surface. A curled sheet ruins the calibrati
 2. Select the camera in the **Camera** dropdown.
 3. Click **Calibrate Camera**.
 
-![The built-in camera intrinsics calibration tool](/img/ui-screenshots/utils-calibration-modal.png)
-
 **Expected result:** a modal opens with a live camera feed on the left and capture controls
 on the right.
 
 ## 3. Enter your board settings
 
 Fill in **Squares X**, **Squares Y**, **Square m**, and **Marker m** with your measured
-values. The marker size must be smaller than the square size — the tool rejects the settings
+values. The marker size must be smaller than the square size. The tool rejects the settings
 otherwise.
 
 The live-resolution selector controls only how large the preview is streamed to your browser.
@@ -61,15 +59,21 @@ differ from each other:
 
 - Board centered, filling most of the frame.
 - Board in each corner of the frame.
-- Board tilted left, right, up, and down — roughly 20–45° of tilt.
+- Board tilted left, right, up, and down, with roughly 20 to 45 degrees of tilt.
 - Board close and far.
 - Do not rotate the board flat in the image plane only; tilt is what constrains the lens model.
 
 Hold still for each capture. Motion blur is the most common cause of a bad calibration.
 
 **Expected result:** the status text confirms the capture and the frame appears in the
-captured-frames list. If a capture is rejected, the board was not found — move closer, add
+captured-frames list. If a capture is rejected, the board was not found. Move closer, add
 light, or reduce glare.
+
+The upper preview marks every detected ChArUco corner. The lower plot shows where the captured
+corners cover the image. Spread captures across that plot instead of collecting many nearly
+identical views in the center.
+
+![Live ChArUco detections, six captured frames, and their corner coverage](/img/ui-screenshots/calibration-live-coverage.png)
 
 Use **Reset** to throw away all captures and start over. You can delete individual frames from
 the captured-frame list if one was blurry. The tool accepts at least three valid frames; collect
@@ -101,10 +105,10 @@ the calibration with better frames.
 
 The Utils tab also lets you:
 
-- **Upload Intrinsics** — drop in a `.json` calibration file from elsewhere for the selected
+- **Upload Intrinsics:** drop in a `.json` calibration file from elsewhere for the selected
   camera. Useful for cloning a known-good calibration onto an identical spare camera, though
   a real per-camera calibration is always better.
-- **Delete Current Intrinsics** — remove the calibration for the selected camera. Nodes that
+- **Delete Current Intrinsics:** remove the calibration for the selected camera. Nodes that
   need it will fail to start until you calibrate again.
 
 ## Troubleshooting

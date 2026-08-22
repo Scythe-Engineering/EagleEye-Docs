@@ -26,7 +26,10 @@ Cameras are detected during startup. After plugging in or unplugging anything:
 sudo systemctl restart eagleeye
 ```
 
-or use **Restart Backend** in the Settings tab.
+or open the **Settings** tab from the navigation on the right, then click **Restart
+Backend** at the bottom of the **Backend Settings** panel.
+
+![Restart Backend and Reboot Computer controls in the Settings tab](/img/ui-screenshots/settings-restart-controls.png)
 
 ## 2. Check the Views tab
 

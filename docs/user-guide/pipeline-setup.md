@@ -74,6 +74,11 @@ Click the existing **Detect AprilTags** node. The starter already connects `Devi
 | `refine_edges` | `1` | Leave on |
 | `decode_sharpening` | `0.25` | Leave alone unless you know why you are changing it |
 
+The settings window opens a live view beside the controls. Detected tags get an outline and
+ID marker, so you can check detection without leaving the pipeline editor.
+
+![Detect AprilTags settings beside the live detection view](/img/ui-screenshots/apriltag-live-detections.png)
+
 ## 4. Minimum AprilTag Count
 
 The starter connects Detect AprilTags directly to PnP. Delete that connection, then drag
@@ -88,6 +93,8 @@ The starter connects Detect AprilTags directly to PnP. Delete that connection, t
 This stops the rest of the pipeline for this frame when too few tags are visible. A pose from
 a single small tag is the main source of the wild jumps teams complain about. Set it to `1` if
 you need single-tag operation and you understand the noise you are accepting.
+
+![Device Input, Detect AprilTags, and Minimum AprilTag Count at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-input-detection-closeup.png)
 
 ## 5. PnP Camera Localization
 
@@ -133,6 +140,8 @@ Drag it on and connect `Robot Pose Output.pose` → `Publish To NetworkTables.da
 
 This is the node that gets data to your robot.
 
+![Localization, robot pose, and NetworkTables output at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-pose-output-closeup.png)
+
 ## 9. Check and save
 
 1. Double-click empty canvas to fit the graph in view.
@@ -141,8 +150,6 @@ This is the node that gets data to your robot.
 
 **Expected result:** your pipeline is listed as active, and with the camera looking at tags the
 3D View shows a robot pose that moves sensibly when you move the camera.
-
-![A completed AprilTag pipeline with NetworkTables output](/img/ui-screenshots/pipeline-setup/apriltag-pipeline-complete.png)
 
 ## Optional additions
 

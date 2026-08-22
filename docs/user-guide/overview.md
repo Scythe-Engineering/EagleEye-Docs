@@ -12,6 +12,25 @@ NetworkTables so robot code can use them.
 This guide is written for the person setting up the coprocessor. You need to be able to use a
 terminal and SSH. You do not need to read the EagleEye source code.
 
+## How the UI is laid out
+
+The main panel fills the left side of the browser. A six-tab navigation bar stays on the
+right:
+
+![EagleEye UI with the main panel on the left and navigation on the right](/img/ui-screenshots/views-tab.png)
+
+| Tab | Use it for |
+|-----|------------|
+| **Views** | Aim and focus each camera from its live feed |
+| **3D View** | Check the robot pose against the field model |
+| **Pipeline** | Add operations, connect ports, and edit node settings |
+| **System** | Watch pipeline state, CPU, memory, temperature, and storage |
+| **Settings** | Configure Wi-Fi and NetworkTables, read logs, and restart the backend |
+| **Utils** | Calibrate a camera and save its position on the robot |
+
+Most setup work moves between **Views**, **Pipeline**, **Settings**, and **Utils**. The
+[UI reference](./user-interface) explains every tab.
+
 ## What you will end up with
 
 - A Raspberry Pi running EagleEye as a service, reachable at `http://<pi-address>:5001`.
@@ -32,11 +51,8 @@ terminal and SSH. You do not need to read the EagleEye source code.
 9. [Add temporal acceleration](./temporal-acceleration) — the feedback edge that makes it fast.
 10. [Verify and tune](./verify-and-tune) — check the numbers before you trust them.
 
-After setup:
-
-- [Daily operations](./daily-operations) — what to do at an event, before each match.
-- [User interface reference](./user-interface) — every tab and control.
-- [Troubleshooting](./troubleshooting) — symptoms, causes, fixes.
+After setup, use the [UI reference](./user-interface) for individual controls and
+[Troubleshooting](./troubleshooting) for symptoms, causes, and fixes.
 
 ## Two things people get wrong
 

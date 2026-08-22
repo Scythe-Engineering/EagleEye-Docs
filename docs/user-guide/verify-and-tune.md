@@ -110,7 +110,8 @@ bus ID, and pose comes back with no manual steps.
 
 If the bus ID changed, a camera moved ports. See [Check Your Cameras](./cameras).
 
-Next: [Daily Operations](./daily-operations).
+For individual controls, keep the [User Interface Reference](./user-interface) nearby. If a
+check fails, go to [Troubleshooting](./troubleshooting).
 
 :::note
 Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). Accuracy

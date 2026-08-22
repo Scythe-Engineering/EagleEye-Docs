@@ -27,6 +27,13 @@ Device Input ──frame──► Temporal Acceleration ──processed_frame─
 The rest of the pipeline from PnP onward is unchanged from
 [Build an AprilTag Pipeline](./pipeline-setup).
 
+The two close views below show the running graph at a readable scale. The dashed
+`camera_pose` line is the previous-frame feedback path.
+
+![Device Input, Temporal Acceleration, detection, and the start of the feedback path](/img/ui-screenshots/pipeline-setup/apriltag-temporal-input-closeup.png)
+
+![PnP, robot pose output, NetworkTables output, and the returning feedback path](/img/ui-screenshots/pipeline-setup/apriltag-temporal-output-closeup.png)
+
 ## 1. Insert the node
 
 1. Open your pipeline in the **Pipeline** tab.
@@ -41,22 +48,32 @@ The rest of the pipeline from PnP onward is unchanged from
 | Setting | Starting value | Notes |
 |---------|----------------|-------|
 | `camera_bus_id` | your camera | Must match Device Input |
-| `apriltag_map_path` | `{project_root}/src/webui/assets/fields/2026/apriltag_maps/FE-2026-_REBUILTTM_Playing_Field.fmap` | Same map as PnP |
+| `apriltag_map_path` | `room.fmap` | Use the same uploaded map as PnP |
 | `padding_factor` | `0.35` | Extra margin around each predicted region. Higher means more tolerance for motion and less speedup |
 | `max_regions` | `20` | Most regions considered per frame |
 | `min_region_size_px` | `16` | Regions smaller than this are skipped |
 | `max_detection_distance_m` | `0.0` | Skip tags farther than this from the camera. `0` disables the limit |
 
 Like PnP, this node loads the camera's intrinsics at startup and will not run without them.
+Click the node's gear button to open its settings. The live view on the right shows the frame
+being passed to the detector, so you can see whether the predicted regions still contain the
+tags while you tune the operation.
 
-![Temporal Acceleration settings with camera, field map, and region values](/img/ui-screenshots/pipeline-temporal-settings.png)
+![Temporal Acceleration settings beside its live processed-frame view](/img/ui-screenshots/pipeline-setup/apriltag-temporal-live-view.png)
+
+Most numeric settings apply to the running operation as soon as you click **Done**. Camera and
+map changes rebuild resources used by the operation, so those fields are marked as requiring a
+backend restart. The Pipeline tab shows a red **Backend restart required** banner only when the
+saved change needs one.
+
+![Backend restart required banner in the Pipeline tab](/img/ui-screenshots/pipeline-restart-required.png)
 
 ## 3. Add the feedback edge
 
 Connect `PnP Camera Localization.camera_pose` → `Temporal Acceleration.camera_pose`.
 
 The connection is drawn back across the canvas. You can drag waypoints on the edge to route it
-somewhere readable — cosmetic only.
+somewhere readable. This only changes its appearance.
 
 ## 4. Mark the feedback edge as default
 
@@ -71,7 +88,7 @@ treat it as a cycle rather than as feedback.
 **Expected result:** the connection is redrawn as a dashed line, and the same menu item now
 reads **Remove Default Status**.
 
-A default connection is excluded from the execution-order and cycle calculations — it delivers
+A default connection is excluded from the execution-order and cycle calculations. It delivers
 the previous cycle's value instead of forcing PnP to run before the preprocessor. That is
 exactly what a feedback edge needs.
 
@@ -86,8 +103,6 @@ not one of PnP's other outputs.
 3. Move the camera slowly, then make a faster turn while watching whether detections continue.
 
 **Expected result:** the pipeline keeps detecting tags while the predicted regions follow the camera motion.
-
-![The complete pipeline with Temporal Acceleration and its feedback edge](/img/ui-screenshots/pipeline-setup/apriltag-pipeline-temporal.png)
 
 If fast motion moves tags outside the predicted regions, raise `padding_factor` toward `0.65` or higher. If the pipeline keeps searching stale regions after losing pose, temporarily remove the temporal node from the frame path to reacquire tags across the full image.
 

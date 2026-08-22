@@ -3,13 +3,16 @@ sidebar_position: 13
 title: User Interface Reference
 ---
 
-# User Interface Reference
+# User interface reference
 
 Reference for every tab and control in the EagleEye web UI, served at
 `http://<device-address>:5001`. For step-by-step setup, start at
 [Start Here](./overview).
 
-Six tabs are listed in the navigation sidebar on the right of every page:
+The large panel on the left holds the current tool. Six tabs stay in the navigation on the
+right:
+
+![EagleEye UI with the main panel on the left and navigation on the right](/img/ui-screenshots/views-tab.png)
 
 | Tab | Purpose |
 |-----|---------|
@@ -20,6 +23,10 @@ Six tabs are listed in the navigation sidebar on the right of every page:
 | **Settings** | Backend configuration, logs, terminal, system tools |
 | **Utils** | Camera calibration and extrinsics |
 
+Start in **Views** to check the camera. Use **Pipeline** to build the graph. Open
+**Settings** for device and network controls, then use **System** to confirm the pipeline is
+running. **Utils** holds camera calibration and placement.
+
 ---
 
 ## Views
@@ -27,7 +34,7 @@ Six tabs are listed in the navigation sidebar on the right of every page:
 ![Views tab](/img/ui-screenshots/views-tab.png)
 
 Live stream of every detected camera, one card each, labelled with the camera name. This is
-the raw camera feed, not pipeline output — use it for aiming, focus, and exposure.
+the raw camera feed, not pipeline output. Use it for aiming, focus, and exposure.
 
 If no cameras were detected, the tab shows a message instead of cards. See
 [Check Your Cameras](./cameras).
@@ -72,16 +79,16 @@ corner shows scene statistics and frame rate.
 
 ## Pipeline
 
-![Pipeline tab](/img/ui-screenshots/pipeline-tab.png)
+![AprilTag pipeline at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-temporal-input-closeup.png)
 
 The pipeline editor.
 
 ### Layout
 
-- **Canvas** — nodes and connections.
-- **Operations list** — drag operations onto the canvas.
-- **Operation settings** — opens when you click a node.
-- **Pipeline dropdown** — switch pipelines; **New Pipeline** creates one.
+- **Canvas:** nodes and connections.
+- **Operations list:** drag operations onto the canvas.
+- **Operation settings:** opens when you click a node.
+- **Pipeline dropdown:** switch pipelines; **New Pipeline** creates one.
 
 ### Working with the graph
 
@@ -98,14 +105,77 @@ The pipeline editor.
 If the context menu reads **Cannot Set Default**, that target port does not accept a default
 connection.
 
-Edits save as you make them. Some changes prompt for a backend restart.
+Edits save as you make them. Changing node positions or ordinary tuning values does not stop
+the running backend. When an operation supports live configuration, clicking **Done** applies
+the new values to that operation immediately.
+
+Some fields build resources that cannot be replaced safely while the operation is running.
+Camera selection, model selection, and map selection are common examples. These fields show a
+restart note in the settings panel. Graph structure changes also require the backend to rebuild
+the pipeline. After you save one of these changes, a red **Backend restart required** banner
+appears above the canvas. Click **Restart** there when you are ready to interrupt processing and
+load the saved configuration.
+
+![The restart banner that appears above the pipeline canvas when a saved change needs the backend rebuilt](/img/ui-screenshots/pipeline-restart-required.png)
+
+Operation settings can also include a live view. Open the node's gear button to tune it beside
+the image it produces. This is useful for detection, filtering, and preprocessing operations.
+
+![Temporal Acceleration settings beside its live processed-frame view](/img/ui-screenshots/pipeline-setup/apriltag-temporal-live-view.png)
 
 ### Profiling panels
 
-Overlaid on the canvas: an execution timestep list and an execution summary. Both read "No
-profiling data" until frames flow. The `i` button opens **Profiling details** with
-per-operation timings and a **Cumulative avg** checkbox that averages samples over time rather
-than showing the newest frame.
+The canvas overlays two small profiling panels. The left panel lists each execution timestep
+and its operation time. The summary shows:
+
+| Value | Meaning |
+|-------|---------|
+| **Flow** | Time spent running the operation graph for the current frame |
+| **FPS** | Estimated completed pipeline cycles per second, including the wait for a fresh input frame |
+| **Latency** | Age of the camera frame when processing finished, including capture, transfer, decode, and pipeline work |
+
+Both panels read "No profiling data" until frames flow.
+
+#### Timestep numbers and thread colors
+
+Each node has a colored square at its upper-left corner:
+
+- The number is the zero-based execution timestep. It is not a thread number.
+- The color identifies the worker thread. Thread 1 is red, Thread 2 is teal, and later
+  threads use blue, light green, yellow, gray, pink, purple, green, and orange. The palette
+  repeats if a pipeline needs more than ten threads.
+- Nodes with the same number belong to the same timestep. They can run at the same time when
+  the scheduler assigns them different thread colors.
+- A thread can run several nodes across different timesteps. The color follows the thread,
+  not the operation type.
+
+The **PREP**, **DET**, **FILT**, **PROC**, and **NET** chips inside the node header describe
+the operation category. Their colors are unrelated to worker threads. The green badge at the
+upper-right of a running node is that operation's measured time for the latest frame.
+
+![Timestep badges, thread colors, and live timings on the first half of an AprilTag pipeline](/img/ui-screenshots/pipeline-setup/apriltag-input-detection-closeup.png)
+
+The compact timestep list uses the same colors. If several threads participate in one
+timestep, its circle is split into equal colored segments.
+
+#### Profiling details
+
+Click the `i` button to open **Profiling details**. The top section records frame wall time,
+full cycle time, capture latency, and the frame sequence. **By timestep** compares the wall
+time around a group with **Σ ops**, the sum of its individual operation times. When operations
+run in parallel, **Σ ops** can be larger than wall time.
+
+![Profiling details grouped by execution timestep](/img/ui-screenshots/pipeline-profiling.png)
+
+Scroll to **By thread** to see which operations the scheduler assigned to each worker. Thread
+numbers start at 1. The scheduler chooses the minimum number of workers needed for operations
+that overlap, then reuses those workers in later timesteps.
+
+![Profiling details grouped by worker thread](/img/ui-screenshots/pipeline-profiling-threads.png)
+
+Enable **Cumulative avg** to replace the newest-frame numbers with the arithmetic mean of all
+profiling updates received since you enabled it. It is not a rolling window. Turn it off and
+back on to start a new average.
 
 ### Operations
 
@@ -181,7 +251,7 @@ Live hardware and pipeline status, updated continuously by the backend.
 | **RAM** | Usage percentage and amounts |
 | **Storage** | Usage percentage and amounts |
 
-If the numbers stop moving, the UI has lost its connection to the backend — reload the page,
+If the numbers stop moving, the UI has lost its connection to the backend. Reload the page,
 then check the service.
 
 ---
@@ -201,6 +271,13 @@ then check the service.
 | **Manage Test Videos** | Manage recorded video files usable as camera sources for offline testing |
 | **Robot and Field Files → Manage** | Manage field and robot models used by the 3D View |
 
+#### Connect Wi-Fi
+
+Click **Manage** next to **WiFi Networks**. Enter a password beside the network, then click
+**Connect**. The connected row shows a green status label and a **Disconnect** button.
+
+![Network Manager in the Settings tab with the network name pixelated](/img/ui-screenshots/wifi-manager.png)
+
 ### Network Table
 
 | Control | Description |
@@ -212,7 +289,7 @@ then check the service.
 
 | Control | Description |
 |---------|-------------|
-| **View stream downscale** | How much camera preview streams are shrunk before being sent to the browser. Lower values reduce bandwidth and CPU. Preview only — pipelines are unaffected |
+| **View stream downscale** | How much camera preview streams are shrunk before being sent to the browser. Lower values reduce bandwidth and CPU. This affects previews only; pipelines are unaffected |
 
 ### Actions
 
@@ -221,6 +298,8 @@ then check the service.
 | **Save Settings** | Persists the settings above |
 | **Restart Backend** | Restarts the EagleEye backend process |
 | **Reboot Computer** | Reboots the whole device |
+
+![Restart Backend and Reboot Computer controls](/img/ui-screenshots/settings-restart-controls.png)
 
 ### System Logs
 
@@ -242,7 +321,7 @@ use SSH.
 
 ![Utils tab](/img/ui-screenshots/utils-tab.png)
 
-Per-camera configuration. Select the camera in the **Camera** dropdown first — everything on
+Per-camera configuration. Select the camera in the **Camera** dropdown first. Everything on
 this tab applies to the selected camera.
 
 ### Extrinsics

@@ -161,7 +161,12 @@ Default Status**. Without that, the loop is treated as a cycle instead of feedba
 
 ## Restart-required indicator will not clear
 
-Click **Restart Backend** in Settings. If nothing happens, restart from a shell:
+Open the **Settings** tab from the navigation on the right. Click **Restart Backend** at the
+bottom of the **Backend Settings** panel.
+
+![Restart Backend and Reboot Computer controls in the Settings tab](/img/ui-screenshots/settings-restart-controls.png)
+
+If nothing happens, restart from a shell:
 
 ```bash
 sudo systemctl restart eagleeye
