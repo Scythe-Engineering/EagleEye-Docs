@@ -238,6 +238,34 @@ main tbody tr:last-child td:last-child {
   border-bottom-right-radius: 7px;
 }
 
+/* Search: theme hooks exposed by @easyops-cn/docusaurus-search-local */
+:root {
+  --ifm-navbar-search-input-background-color: #161b25;
+  --ifm-navbar-search-input-color: #e5e7eb;
+  --ifm-navbar-search-input-placeholder-color: #8a94a3;
+  --search-local-modal-background: #131722;
+  --search-local-modal-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --search-local-hit-background: #161b25;
+  --search-local-hit-shadow: none;
+  --search-local-hit-color: #e5e7eb;
+  --search-local-hit-active-color: #0d1118;
+  --search-local-highlight-color: #f9c84a;
+  --search-local-muted-color: #8a94a3;
+  --search-local-input-active-border-color: rgba(249, 200, 74, 0.6);
+}
+
+.navbar__search-input {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  height: 2.25rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, width 0.2s ease;
+}
+
+.navbar__search-input:focus {
+  border-color: rgba(249, 200, 74, 0.6);
+  box-shadow: 0 0 0 3px rgba(249, 200, 74, 0.12);
+}
+
 /* Markdown content images: rounded corners + neomorphic shadow */
 .theme-doc-markdown img {
   border-radius: 12px;
