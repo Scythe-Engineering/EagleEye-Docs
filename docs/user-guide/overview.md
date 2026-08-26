@@ -3,68 +3,50 @@ sidebar_position: 1
 title: Start Here
 ---
 
-# Start Here
+# Start here
 
-EagleEye runs on a coprocessor (usually a Raspberry Pi) next to your robot. It reads camera
-frames, runs them through a pipeline you build in a web UI, and publishes results to
-NetworkTables so robot code can use them.
+EagleEye runs on a coprocessor, usually a Raspberry Pi, next to your robot. It reads camera frames, runs a pipeline configured in the browser, and publishes timestamped robot poses to NetworkTables.
 
-This guide is written for the person setting up the coprocessor. You need to be able to use a
-terminal and SSH. You do not need to read the EagleEye source code.
+## What you will set up
 
-## How the UI is laid out
+- EagleEye running as a service at `http://eagleeye.local:5001` or the device's IP address.
+- One or more calibrated USB cameras with saved robot-relative positions.
+- A bundled localization pipeline configured for your camera and field.
+- `EagleEyeCamera` feeding accepted vision observations into your WPILib pose estimator.
 
-The main panel fills the left side of the browser. A six-tab navigation bar stays on the
-right:
+## Setup order
 
-![EagleEye UI with the main panel on the left and navigation on the right](/img/ui-screenshots/views-tab.png)
+1. [Prepare the Raspberry Pi](./prepare-pi).
+2. [Install EagleEye](./install).
+3. [Open the UI](./open-the-ui).
+4. [Check your cameras](./cameras).
+5. [Calibrate intrinsics](./calibrate-intrinsics).
+6. [Configure extrinsics](./configure-extrinsics).
+7. [Connect NetworkTables](./networktables).
+8. [Create a localization pipeline](./pipeline-setup).
+9. [Add EagleEye to robot code](./robot-integration).
+10. [Add temporal acceleration](./temporal-acceleration) if the basic pipeline needs more throughput.
+11. [Verify and tune](./verify-and-tune).
 
-| Tab | Use it for |
-|-----|------------|
-| **Views** | Aim and focus each camera from its live feed |
-| **3D View** | Check the robot pose against the field model |
-| **Pipeline** | Add operations, connect ports, and edit node settings |
-| **System** | Watch pipeline state, CPU, memory, temperature, and storage |
-| **Settings** | Configure Wi-Fi and NetworkTables, read logs, and restart the backend |
-| **Utils** | Calibrate a camera and save its position on the robot |
+## WebUI tabs
 
-Most setup work moves between **Views**, **Pipeline**, **Settings**, and **Utils**. The
-[UI reference](./user-interface) explains every tab.
+| Tab | Use |
+|-----|-----|
+| **Views** | Aim and focus camera feeds |
+| **3D View** | Compare the reported robot pose with the field |
+| **Pipeline** | Create a template pipeline, connect operations, and configure files |
+| **System** | Check pipeline state and device load |
+| **Settings** | Configure Wi-Fi, NetworkTables, managed assets, updates, logs, and terminal access |
+| **Utils** | Calibrate cameras and save their robot-relative transforms |
 
-## What you will end up with
+## Important distinctions
 
-- A Raspberry Pi running EagleEye as a service, reachable at `http://<pi-address>:5001`.
-- One or more USB cameras, each calibrated and positioned on the robot.
-- A pipeline that detects AprilTags, estimates the robot pose, and publishes it to
-  NetworkTables under the `EagleEye` table.
+**Robot Pose Output only updates the 3D view.** A separate **Publish To NetworkTables** node sends data to the robot. Bundled localization templates wire both paths correctly.
 
-## Do these in order
+**The robot library needs pose and metadata.** The default front-camera keys are `localization/front/pose` and `localization/front/meta` below the `EagleEye` table.
 
-1. [Prepare the Raspberry Pi](./prepare-pi) — flash Raspberry Pi OS Lite, enable SSH, update.
-2. [Install EagleEye](./install) — one command, then a service that starts on boot.
-3. [Open the UI](./open-the-ui) — port 5001, first-run checks.
-4. [Check your cameras](./cameras) — confirm each camera is detected and label its USB port.
-5. [Calibrate intrinsics](./calibrate-intrinsics) — built-in ChArUco calibration in the Utils tab.
-6. [Configure extrinsics](./configure-extrinsics) — where the camera sits on the robot.
-7. [Connect NetworkTables](./networktables) — point EagleEye at the roboRIO.
-8. [Build an AprilTag pipeline](./pipeline-setup) — the minimum working graph.
-9. [Add temporal acceleration](./temporal-acceleration) — the feedback edge that makes it fast.
-10. [Verify and tune](./verify-and-tune) — check the numbers before you trust them.
+**Intrinsics and extrinsics are separate.** Intrinsics describe the lens. Extrinsics describe where the camera sits on the robot. PnP and Camera To Robot Pose need both.
 
-After setup, use the [UI reference](./user-interface) for individual controls and
-[Troubleshooting](./troubleshooting) for symptoms, causes, and fixes.
+**Managed file controls replace raw paths.** When a map or model is absent from a dropdown, use the adjacent **Manage** button to upload it.
 
-## Two things people get wrong
-
-**Robot Pose Output does not publish to NetworkTables.** It sends the pose to the web UI's 3D
-view. To get data to the robot you must add a **Publish To NetworkTables** node. See
-[Connect NetworkTables](./networktables).
-
-**Intrinsics are required before pose estimation.** The PnP and temporal acceleration nodes
-fail to start if the selected camera has no intrinsics file.
-
-:::note Verification status
-This guide was written against EagleEye-Vision-System `main` at commit `c73a871`
-(2026-08-20). Robot-side end-to-end output (a roboRIO actually consuming the published pose)
-was not tested while writing this guide.
-:::
+The [UI reference](./user-interface) covers individual controls. [Troubleshooting](./troubleshooting) starts from symptoms.

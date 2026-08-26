@@ -141,6 +141,10 @@ const config = {
                 label: "Troubleshooting",
                 to: "/docs/user-guide/troubleshooting",
               },
+              {
+                label: "License",
+                to: "/docs/user-guide/license",
+              },
             ],
           },
         ],

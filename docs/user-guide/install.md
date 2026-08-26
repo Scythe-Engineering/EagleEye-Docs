@@ -5,63 +5,51 @@ title: Install EagleEye
 
 # Install EagleEye
 
-Run this on the Pi you prepared in [Prepare the Raspberry Pi](./prepare-pi), over SSH.
-The Pi must have internet access. A robot network normally does not provide it; if you used
-Ethernet for the first connection, [connect the Pi to Wi-Fi or a hotspot](./connect-wifi)
-before continuing.
+If you flashed the EagleEye image, the software and system service are already installed. Open `http://eagleeye.local:5001`. Use this page for a stock Raspberry Pi OS installation or to verify the service.
 
-## 1. Run the installer
+## Install on stock Raspberry Pi OS
+
+Connect over SSH as the normal sudo-capable user that should own EagleEye. Do not run the installer as root or prefix it with `sudo`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Scythe-Engineering/EagleEye-Vision-System/main/install.sh | bash
+(
+  installer="$(mktemp)" &&
+  trap 'rm -f "$installer"' EXIT &&
+  curl -fsSL https://raw.githubusercontent.com/Scythe-Engineering/EagleEye-Vision-System/main/install.sh -o "$installer" &&
+  bash "$installer"
+)
 ```
 
-Run it as your normal sudo-capable user, **not** as root and not with `sudo`. The installer creates `~/EagleEye-Vision-System`, installs and enables the `eagleeye` service, and includes `v4l-utils` for camera discovery.
+The installer checks the platform, clones EagleEye into `~/EagleEye-Vision-System`, installs system packages and toolchains, syncs Python dependencies, builds the WebUI and Rust extensions, and creates the `eagleeye` systemd service. It performs fresh installs only. Use **Settings → System Update** for an existing installation.
 
-The installer sets up system packages, the Python environment, the web UI build, and a
-systemd service. It takes a while on a Pi — the Rust extensions are compiled during setup.
+The Pi needs internet access while installing. A competition robot network normally does not provide it.
 
-**Expected result:** the installer finishes without an error and tells you the UI address.
-
-## 2. Confirm the service is running
-
-EagleEye runs as a systemd service named `eagleeye`:
+## Verify the service
 
 ```bash
 systemctl status eagleeye
 ```
 
-**Expected result:** the status shows `active (running)` and the log lines below the status
-mention initializing the EagleEye backend and detected inference devices.
-
-Useful commands:
+The status should show `active (running)`. Useful commands:
 
 | Task | Command |
 |------|---------|
-| Start | `sudo systemctl start eagleeye` |
-| Stop | `sudo systemctl stop eagleeye` |
 | Restart | `sudo systemctl restart eagleeye` |
+| Follow logs | `journalctl -u eagleeye -f` |
 | Start on boot | `sudo systemctl enable eagleeye` |
-| Follow the log live | `journalctl -u eagleeye -f` |
 
-## 3. Note the address
+The WebUI listens on every interface at port 5001:
 
-The web UI listens on port **5001** on every interface. You will reach it at
-`http://<hostname>.local:5001` or `http://<pi-ip>:5001`.
+```text
+http://eagleeye.local:5001
+http://<device-ip>:5001
+```
 
-## If the install fails
+## If installation fails
 
-- Read the last 40 lines of output. Most failures are network (package download) or a
-  partially updated system — re-run `sudo apt update && sudo apt full-upgrade -y` and try
-  again.
-- If the backend starts and then exits with
-  `Failed to build Rust implementations. Backend initialization cannot continue.`, the Rust
-  toolchain or a compile step failed. See
-  [Troubleshooting → Backend exits at startup](./troubleshooting#backend-exits-at-startup).
-- Check free space with `df -h`. A full card produces confusing errors.
+- Check internet access and rerun `sudo apt update`.
+- Check free storage with `df -h`.
+- If Rust extensions fail to build, inspect the installer output and [backend startup troubleshooting](./troubleshooting#backend-exits-at-startup).
+- If the target directory already exists, do not delete a working installation. Open **Settings → System Update** instead.
 
 Next: [Open the UI](./open-the-ui).
-
-:::note
-The installer was clean-tested on a Raspberry Pi Compute Module 5 running Debian 12 on 2026-08-21. It generates the service for the user who runs the install command and that user's checkout path.
-:::

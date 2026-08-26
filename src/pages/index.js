@@ -57,7 +57,7 @@ const showcaseItems = [
     body: 'Open an operation to inspect its output while the pipeline runs.',
     image: '/img/ui-screenshots/apriltag-detection-frame.png',
     alt: 'Live camera frame with detected AprilTags marked',
-    to: '/docs/user-guide/pipeline-setup#3-detect-apriltags',
+    to: '/docs/user-guide/pipeline-setup',
   },
   {
     title: 'Build the graph',

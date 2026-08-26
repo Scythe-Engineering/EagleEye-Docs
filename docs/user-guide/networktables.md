@@ -5,106 +5,71 @@ title: Connect NetworkTables
 
 # Connect NetworkTables
 
-EagleEye joins NetworkTables as a **client** named `EagleEye` and publishes under the
-**`EagleEye` table**. The roboRIO (or a simulation host) is the server.
-
-:::danger Read this before you build a pipeline
-The **Robot Pose Output** node does *not* send anything to NetworkTables. It pushes the pose to
-the web UI's 3D view over the UI's own event stream. The only node that writes to
-NetworkTables is **Publish To NetworkTables**. A pipeline that ends at Robot Pose Output will
-look perfect in the UI and send nothing to your robot.
-:::
+EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a simulation host, is the server. Every pipeline publisher writes below the fixed `EagleEye` table.
 
 ## 1. Point EagleEye at the roboRIO
 
-1. Open the **Settings** tab.
-2. Under **Network Table**, set the robot address.
+1. Open **Settings**.
+2. Under **Network Table**, enter the robot address.
 3. Click **Save Settings**.
-4. In the same **Settings** tab, click **Restart Backend** at the bottom of the
-   **Backend Settings** panel.
+4. Restart the backend.
 
 ![Restart Backend and Reboot Computer controls in the Settings tab](/img/ui-screenshots/settings-restart-controls.png)
 
-A fresh install starts with `localhost`; replace it before using a real robot.
-For a real robot use one of:
-
-| Address | When to use |
-|---------|-------------|
-| `10.TE.AM.2` | Normal. Team 3322 → `10.33.22.2` |
-| `roborio-TEAM-frc.local` | If mDNS works reliably on your network |
+| Address | Use |
+|---------|-----|
+| `10.TE.AM.2` | Normal robot network, such as `10.33.22.2` for team 3322 |
+| `roborio-TEAM-frc.local` | Robot network when mDNS is reliable |
 | `172.22.11.2` | roboRIO over USB |
-| `127.0.0.1` | Simulation server on the same machine |
+| `127.0.0.1` | Simulation server on the same computer |
 
-## 2. Check the connection status
+The status indicator beside the address should report a connection. If it does not, ping the roboRIO from the coprocessor and confirm robot code is running.
 
-Still in Settings, look at the **Network Table** status indicator next to the address field.
+## 2. Use the localization contract
 
-**Expected result:** it reports a connected state. Before the first successful connection it
-reads `Unknown`.
+The bundled localization templates publish two timestamp-matched values:
 
-If it does not connect:
+| Full topic | Type | Contents |
+|------------|------|----------|
+| `EagleEye/localization/front/pose` | `Pose3d` struct | Robot pose in field coordinates |
+| `EagleEye/localization/front/meta` | `double[3]` | Tag count, mean tag distance in metres, and reprojection error in pixels |
 
-```bash
-ping 10.33.22.2
-```
+In **Publish To NetworkTables**, `target_key` is relative to the `EagleEye` table. Enter `localization/front/pose`, not `EagleEye/localization/front/pose`.
 
-from the Pi, with your team's address. No reply means it is a network problem, not an EagleEye
-problem — check the radio, the Ethernet run, and that the roboRIO is powered and its code is
-running (NetworkTables server only runs when robot code is running).
+The pose and metadata publishers must remain on single-input paths from the same PnP solve. EagleEye carries the capture timestamp through both paths, and the robot library joins the values by exact timestamp.
 
-## 3. Publish something
+:::warning Robot Pose Output is not a publisher
+**Robot Pose Output** updates the WebUI 3D view. Only **Publish To NetworkTables** writes to NetworkTables. The templates connect both independently so the 3D view cannot suppress repeated stationary poses from the robot.
+:::
 
-Add a **Publish To NetworkTables** node to your pipeline and feed it the data you want on the
-robot. Its settings:
+## 3. Verify the topics
+
+Use AdvantageScope, OutlineViewer, or your dashboard's NetworkTables viewer. With mapped tags visible, confirm both topics appear below `EagleEye` and update together.
+
+If pose appears without metadata, `EagleEyeCamera` drops it because it cannot choose measurement uncertainty. If metadata appears without pose, check the Camera To Robot Pose connection and pose publisher.
+
+## Other publisher settings
 
 | Setting | Meaning |
 |---------|---------|
-| `target_key` | The key inside the `EagleEye` table, e.g. `robot_pose` |
-| `schema` | `auto` lets EagleEye pick a WPILib type that matches the data |
-| `data_path` | Optional path into a structured value; leave empty to publish the whole value |
+| `target_key` | Key below the `EagleEye` table |
+| `schema` | WPILib type conversion. Use `pose3d` for the robot-library pose topic |
+| `data_path` | Optional path into structured input; leave empty to publish the whole value |
 
-The shipped `test` pipeline uses `robot_pose` for the robot transform and `camera_pose` for the camera transform. The `2026_apriltag_starter` does not publish until you add this node.
+Unsupported values pass to downstream pipeline nodes but are not published.
 
-For a 4 by 4 pose matrix:
+## Reading robot values in EagleEye
 
-| Schema | Published value |
-|--------|-----------------|
-| `auto` or `pose3d` | WPILib `Pose3d` struct |
-| `pose2d` | WPILib `Pose2d` projected onto the field plane |
-
-Unsupported values are passed to the next pipeline node but are not published. Full wiring is covered in [Build an AprilTag Pipeline](./pipeline-setup).
-
-## 4. Verify the data is arriving
-
-Use a NetworkTables viewer such as the one built into your dashboard, or AdvantageScope,
-connected to the same roboRIO.
-
-**Expected result:** an `EagleEye` table appears with your `target_key` under it, and the
-value changes when the camera sees tags and freezes when it does not.
-
-:::note
-This guide's authors did not test a roboRIO consuming the published values end to end. Confirm
-on your own robot before relying on it in a match.
-:::
-
-## Reading values from the robot
-
-The **Get NetworkTables Value** node reads a key from NetworkTables and injects it into the
-pipeline — useful for feeding gyro heading or robot state into a pipeline. Configure it with
-the NetworkTables key to read.
+**Get NetworkTables Value** reads a robot key into a pipeline. One planned use is supplying gyro yaw to constrained PnP. The solver supports yaw input, but the shipped localization templates do not enable that connection yet.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|-------------|-----|
-| Status never connects | Wrong address, or robot code not running | `ping` the roboRIO; start robot code |
-| Table appears, key missing | No Publish To NetworkTables node, or pipeline not running | Add the node; check the pipeline is active in the System tab |
-| Key exists but never changes | Upstream is producing nothing — usually no tags detected or missing intrinsics | See [Verify and Tune](./verify-and-tune) |
-| Works tethered, fails on the field | Address hard-coded to a USB or `.local` address | Use `10.TE.AM.2` |
+| Symptom | Check |
+|---------|-------|
+| Status never connects | Robot address, network path, and whether robot code is running |
+| `EagleEye` table exists but keys do not | Pipeline state and Publish To NetworkTables nodes |
+| Pose freezes while stationary | Pose publisher must connect directly to Camera To Robot Pose, not through Robot Pose Output |
+| Robot warns that a key is missing | Compare `EagleEyeCamera.forSource(...)` with both publisher `target_key` values |
+| Works over USB but not radio | Replace `172.22.11.2` with the normal team address |
 
-Next: [Build an AprilTag Pipeline](./pipeline-setup).
-
-:::note
-Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). The backend
-connects as NetworkTables 4 client `EagleEye` to the address saved in settings.
-:::
+Next: [Build an AprilTag Pipeline](./pipeline-setup), then [Add EagleEye to robot code](./robot-integration).

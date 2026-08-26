@@ -3,172 +3,123 @@ sidebar_position: 9
 title: Build an AprilTag Pipeline
 ---
 
-# Build an AprilTag Pipeline
+# Build an AprilTag pipeline
 
-This page builds the smallest pipeline that gets a robot pose from AprilTags onto
-NetworkTables. Speed comes later, in [Add Temporal Acceleration](./temporal-acceleration).
+EagleEye includes two localization templates:
+
+| Template | Use it when |
+|----------|-------------|
+| **Basic localization** | You want the shortest working camera-to-robot pipeline |
+| **AprilTag localization** | You want temporal acceleration and its camera-pose feedback loop |
+
+Both publish the robot-library contract at `EagleEye/localization/front/pose` and `EagleEye/localization/front/meta`.
 
 ## Before you start
 
-- The camera appears in Views and you know its bus ID.
-- The camera has [intrinsics](./calibrate-intrinsics). Nodes that need them fail to start
-  without them.
+- The camera appears in Views.
+- The camera has [intrinsics](./calibrate-intrinsics).
 - [Extrinsics](./configure-extrinsics) are saved for that camera.
-- The [NetworkTables address](./networktables) is set.
-- You have the 2026 AprilTag map path. The installed repository includes
-  `{project_root}/src/webui/assets/fields/2026/apriltag_maps/FE-2026-_REBUILTTM_Playing_Field.fmap`.
-  Use the map that matches the field you are on — a mismatched map produces confident, wrong
-  poses.
+- [NetworkTables](./networktables) points at the roboRIO.
+- The field's AprilTag map is available in EagleEye.
 
-## The graph you are building
-
-```
-Device Input ──frame──► Detect AprilTags ──detections──► Minimum AprilTag Count
-                                                              │ detections
-                                                              ▼
-                                                    PnP Camera Localization
-                                                              │ camera_pose
-                                                              ▼
-                                                     Camera To Robot Pose
-                                                              │ robot_pose
-                                                              ▼
-                                                     Robot Pose Output  ──pose──►  Publish To NetworkTables
-                                                     (3D view only)                (robot_pose key)
-```
-
-## 1. Open the starter pipeline
+## 1. Create the pipeline
 
 1. Open the **Pipeline** tab.
-2. Choose **`2026_apriltag_starter`** from the **Pipeline** dropdown.
+2. Click **New Pipeline**.
+3. Enter a name.
+4. Select **Basic localization** or **AprilTag localization**.
+5. Create the pipeline.
 
-**Expected result:** the canvas contains Device Input → Detect AprilTags → PnP Camera
-Localization → Camera To Robot Pose → Robot Pose Output. It is intentionally incomplete: its
-camera IDs and map path are blank, and it does not publish to NetworkTables yet.
+EagleEye copies the template with fresh node IDs, so creating it more than once does not cross-connect pipelines.
 
-![The incomplete 2026 AprilTag starter pipeline](/img/ui-screenshots/pipeline-setup/2026-apriltag-starter.png)
+## 2. Select the camera
 
-Drag an operation from the **Operations** list onto the canvas, drag from an output port to an
-input port to connect, and click a node to open its settings. Changes save as you make them.
+Open these nodes and select the same camera in each:
 
-## 2. Device Input
+- **Device Input**
+- **PnP Camera Localization**
+- **Camera To Robot Pose**
 
-Click the existing **Device Input** node and set:
+Set `frame_rotation` on Device Input if the camera is mounted sideways or upside down. Camera selection changes require a backend restart. Use the restart banner above the canvas after saving.
 
-| Setting | Value |
-|---------|-------|
-| `camera_bus_id` | Your camera's bus ID, e.g. `1-1` |
-| `frame_rotation` | `0`, or 90/180/270 if the camera is mounted rotated |
+## 3. Select or upload the field map
 
-Every camera pipeline starts here. Its output port is `frame`.
+Open **PnP Camera Localization**, then use the AprilTag map dropdown.
 
-## 3. Detect AprilTags
+If the map is missing:
 
-Click the existing **Detect AprilTags** node. The starter already connects `Device Input.frame` → `Detect AprilTags.frame`.
+1. Click **Manage** beside the map field.
+2. Choose **Upload File**.
+3. Select the `.fmap` or supported map file.
+4. Close the file manager and select the uploaded file from the refreshed dropdown.
+5. Restart the backend when prompted.
 
-| Setting | Default | Notes |
-|---------|---------|-------|
-| `families` | `tag36h11` | The FRC family. Leave it |
-| `nthreads` | `1` | Raise carefully; more threads competes with the rest of the pipeline |
-| `quad_decimate` | `2.0` | Higher is faster and detects fewer distant tags |
-| `quad_sigma` | `0.0` | Blur before detection; helps on very noisy images |
-| `refine_edges` | `1` | Leave on |
-| `decode_sharpening` | `0.25` | Leave alone unless you know why you are changing it |
+Do not type a raw `{project_root}` path unless you are developing EagleEye itself. The dropdown stores the managed file path for you. A map from the wrong season can produce a stable-looking but incorrect field pose.
 
-The settings window opens a live view beside the controls. Detected tags get an outline and
-ID marker, so you can check detection without leaving the pipeline editor.
+## 4. Check the graph
 
-![Detect AprilTags settings beside the live detection view](/img/ui-screenshots/apriltag-live-detections.png)
+The Basic localization template follows this path:
 
-## 4. Minimum AprilTag Count
+```text
+Device Input -> Detect AprilTags -> Minimum AprilTag Count -> PnP Camera Localization
+                                                               | camera_pose
+                                                               v
+                                                     Camera To Robot Pose
+                                                        |             |
+                                                        v             v
+                                              Robot Pose Output   pose publisher
 
-The starter connects Detect AprilTags directly to PnP. Delete that connection, then drag
-**Minimum AprilTag Count** on and connect
-`Detect AprilTags.detections` → `Minimum AprilTag Count.detections` and
-`Minimum AprilTag Count.detections` → `PnP Camera Localization.detections`.
+PnP Camera Localization.pose_meta -----------------------> metadata publisher
+```
 
-| Setting | Suggested |
-|---------|-----------|
-| `minimum_detections` | `2` |
+The publishers must use:
 
-This stops the rest of the pipeline for this frame when too few tags are visible. A pose from
-a single small tag is the main source of the wild jumps teams complain about. Set it to `1` if
-you need single-tag operation and you understand the noise you are accepting.
+| Data | `target_key` | `schema` |
+|------|--------------|----------|
+| Robot pose | `localization/front/pose` | `pose3d` |
+| PnP quality metadata | `localization/front/meta` | `auto` |
 
-![Device Input, Detect AprilTags, and Minimum AprilTag Count at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-input-detection-closeup.png)
+**Robot Pose Output** only updates the WebUI 3D view. The pose publisher connects directly to **Camera To Robot Pose** so a stationary robot continues publishing fresh measurements.
 
-## 5. PnP Camera Localization
+The AprilTag localization template adds **Temporal Acceleration Preprocessor Rust** before detection and a dashed default feedback connection from PnP camera pose. It keeps the same robot-pose and metadata publishers.
 
-Click the existing **PnP Camera Localization** node. The connection from Minimum AprilTag Count replaces its original direct connection from Detect AprilTags.
+## 5. Start and verify
 
-| Setting | Value |
-|---------|-------|
-| `camera_bus_id` | The same bus ID |
-| `apriltag_map_path` | `{project_root}/src/webui/assets/fields/2026/apriltag_maps/FE-2026-_REBUILTTM_Playing_Field.fmap` |
+1. Restart the backend if the banner requests it.
+2. Open **System** and confirm the pipeline is active.
+3. Point the camera at at least two mapped tags.
+4. Open **3D View** and confirm the robot pose moves correctly.
+5. Check the `EagleEye` table in AdvantageScope or OutlineViewer.
 
-This node loads the camera's intrinsics at startup. If the camera has no calibration, the
-pipeline will not start — go back to [Calibrate Intrinsics](./calibrate-intrinsics).
+You should see:
 
-Its output port is `camera_pose`: where the camera is on the field.
+```text
+EagleEye/localization/front/pose
+EagleEye/localization/front/meta
+```
 
-## 6. Camera To Robot Pose
-
-Click the existing **Camera To Robot Pose** node. The starter already connects `PnP Camera Localization.camera_pose` → `Camera To Robot Pose.camera_pose`.
-
-| Setting | Value |
-|---------|-------|
-| `camera_bus_id` | The same bus ID |
-
-It applies the extrinsics you saved. Output port: `robot_pose`.
-
-## 7. Robot Pose Output
-
-Click the existing **Robot Pose Output** node. The starter already connects `Camera To Robot Pose.robot_pose` → `Robot Pose Output.pose`.
-
-This node sends the pose to the **3D View** tab so you can see it. It has no settings. It
-does **not** touch NetworkTables. Its `pose` output passes the value through so you can chain
-the publisher onto it.
-
-## 8. Publish To NetworkTables
-
-Drag it on and connect `Robot Pose Output.pose` → `Publish To NetworkTables.data`.
-
-| Setting | Value |
-|---------|-------|
-| `target_key` | `robot_pose` |
-| `schema` | `auto` |
-| `data_path` | leave empty |
-
-This is the node that gets data to your robot.
-
-![Localization, robot pose, and NetworkTables output at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-pose-output-closeup.png)
-
-## 9. Check and save
-
-1. Double-click empty canvas to fit the graph in view.
-2. Confirm every required input port has a connection.
-3. Open the **System** tab.
-
-**Expected result:** your pipeline is listed as active, and with the camera looking at tags the
-3D View shows a robot pose that moves sensibly when you move the camera.
-
-## Optional additions
-
-| Node | Why |
-|------|-----|
-| **Pose Outlier Filter Rust** | Insert between Camera To Robot Pose and Robot Pose Output to reject estimates that disagree with recent history |
-| **Tag Filter** | Whitelist or blacklist tag IDs, e.g. ignore tags on the other alliance's side |
-| **Camera Pose Output** | Sends the camera pose to the 3D view for debugging camera placement |
-| **Flatten Pose** | Reduce a 3D pose to x, y, heading before publishing |
+Continue with [Add EagleEye to robot code](./robot-integration).
 
 ## Multiple cameras
 
-Build one pipeline per camera, each with its own bus ID, its own intrinsics, and its own
-extrinsics. Publish to different keys (`robot_pose_front`, `robot_pose_back`) and let your
-robot code feed both into its pose estimator, or combine them in EagleEye with **Pose Fusion**.
+Create one pipeline per camera. Give each pair of publishers its own source:
 
-Next: [Add Temporal Acceleration](./temporal-acceleration).
+```text
+localization/front/pose
+localization/front/meta
+localization/back/pose
+localization/back/meta
+```
 
-:::note
-Verified against EagleEye-Vision-System. The starter pipeline name, ports, and settings above
-match the repository configuration and operation definitions.
-:::
+Let the robot pose estimator consume each camera at its own capture timestamp. Do not fuse camera poses in EagleEye before publishing them; fusion averages measurements taken at different times.
+
+## Optional nodes
+
+| Node | Purpose |
+|------|---------|
+| **Pose Outlier Filter Rust** | Reject estimates that disagree with recent motion |
+| **Tag Filter** | Ignore selected tag IDs |
+| **Camera Pose Output** | Show camera pose in the 3D view |
+| **Flatten Pose** | Convert a 3D pose to x, y, and heading for a custom consumer |
+
+Next: [Add Temporal Acceleration](./temporal-acceleration) or [Add EagleEye to robot code](./robot-integration).

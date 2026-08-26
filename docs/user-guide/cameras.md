@@ -54,6 +54,14 @@ then label that camera's cable and Pi USB port.
 You should not need to inspect Linux device paths or look up bus IDs manually during normal
 setup. When an operation asks for a camera, use the camera identifier shown by the Web UI.
 
+## Camera selection
+
+Use a UVC-compatible USB camera that Linux exposes through V4L2 and that can deliver MJPEG at your target resolution and frame rate. EagleEye does not yet publish a hardware-verified model list, so test the exact camera, cable, hub, and Pi port before standardizing your robot.
+
+For AprilTags, prefer a **global-shutter** sensor. A rolling-shutter camera exposes image rows at different times, so fast robot rotation bends tag corners and degrades PnP even when the frame looks sharp. A global shutter captures the full frame at one instant. Manual exposure control and a fixed-focus lens are also useful under changing field light.
+
+A common webcam can still work for development and low-speed testing. Treat it as unverified until you measure detection range and pose stability while driving and rotating at match speed.
+
 ## 4. Aim and focus
 
 With the live view open, point each camera where it needs to look and check:

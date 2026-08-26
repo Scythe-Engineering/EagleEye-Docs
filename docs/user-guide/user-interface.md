@@ -73,7 +73,7 @@ A 3D field scene with the robot drawn at the latest pose from **Robot Pose Outpu
 A loading overlay with a progress bar appears while assets download. A stats readout in the
 corner shows scene statistics and frame rate.
 
-3D assets are managed from **Settings → Robot and Field Files → Manage**.
+3D assets are managed from **Settings → Robot and Field Files → Manage**. The manager uploads and deletes robot `.glb` files, field `.glb` files, and matching field maps. After upload, select the asset from the 3D View dropdown instead of entering a project path.
 
 ---
 
@@ -88,7 +88,7 @@ The pipeline editor.
 - **Canvas:** nodes and connections.
 - **Operations list:** drag operations onto the canvas.
 - **Operation settings:** opens when you click a node.
-- **Pipeline dropdown:** switch pipelines; **New Pipeline** creates one.
+- **Pipeline dropdown:** switch pipelines; **New Pipeline** creates one from a blank graph or bundled template.
 
 ### Working with the graph
 
@@ -104,6 +104,10 @@ The pipeline editor.
 
 If the context menu reads **Cannot Set Default**, that target port does not accept a default
 connection.
+
+When creating a pipeline, choose **Basic localization**, **AprilTag localization**, **Object detection (CPU)**, or **Object detection (MX3)** to start from a wired graph. EagleEye generates fresh node IDs for every copy.
+
+File parameters have a dropdown and **Manage** control. Use **Manage → Upload File**, close the manager, and select the uploaded file. This is the normal workflow for field maps, models, and other operation assets; raw `{project_root}` paths are for development and imported legacy configurations.
 
 Edits save as you make them. Changing node positions or ordinary tuning values does not stop
 the running backend. When an operation supports live configuration, clicking **Done** applies
