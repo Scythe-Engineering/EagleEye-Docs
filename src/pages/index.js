@@ -27,21 +27,21 @@ function HomepageHeader() {
           </div>
           <div className={styles.statRow}>
             <div className={styles.statCard}>
-              <div className={styles.statValue}>1. Install</div>
+              <div className={styles.statValue}>1. Flash the image</div>
               <div className={styles.statLabel}>
-                One command on supported Debian 12 ARM64 hardware
+                Boot it, then open eagleeye.local:5001
               </div>
             </div>
             <div className={styles.statCard}>
-              <div className={styles.statValue}>2. Build a pipeline</div>
+              <div className={styles.statValue}>2. Set up the camera</div>
               <div className={styles.statLabel}>
-                Discover and check cameras, then wire up detection in the web UI
+                Use the setup wizard when your release provides it
               </div>
             </div>
             <div className={styles.statCard}>
-              <div className={styles.statValue}>3. Publish pose</div>
+              <div className={styles.statValue}>3. Verify pose</div>
               <div className={styles.statLabel}>
-                Publish robot pose to NetworkTables with a configured output node
+                Check 3D View and the NetworkTables keys before driving
               </div>
             </div>
           </div>
@@ -57,14 +57,14 @@ const showcaseItems = [
     body: 'Open an operation to inspect its output while the pipeline runs.',
     image: '/img/ui-screenshots/apriltag-detection-frame.png',
     alt: 'Live camera frame with detected AprilTags marked',
-    to: '/docs/user-guide/pipeline-setup',
+    to: '/docs/user-guide/user-interface',
   },
   {
-    title: 'Build the graph',
-    body: 'Wire camera input, AprilTag detection, pose, and NetworkTables output.',
+    title: 'Edit a custom graph',
+    body: 'Use the pipeline editor for manual setup and custom processing.',
     image: '/img/ui-screenshots/pipeline-setup/apriltag-input-detection-closeup.png',
     alt: 'AprilTag operations connected in the Pipeline tab',
-    to: '/docs/user-guide/pipeline-setup',
+    to: '/docs/user-guide/advanced-pipeline-editor',
   },
   {
     title: 'Check pose on the field',
@@ -121,9 +121,9 @@ function HomepageShowcase() {
           See what the system is doing
         </Heading>
         <p className={styles.sectionBody}>
-          Open <code>http://&lt;device-ip&gt;:5001</code> from a laptop on the
-          robot network. The UI covers camera setup, pipeline editing, live status,
-          and device controls.
+          Open <code>http://eagleeye.local:5001</code> from a laptop on the
+          robot network. The UI covers camera setup, live status, device controls, and
+          advanced pipeline editing.
         </p>
         <div className={styles.showcaseGrid}>
           {showcaseItems.map((item) => (

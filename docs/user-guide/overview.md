@@ -1,52 +1,41 @@
 ---
 sidebar_position: 1
-title: Start Here
+title: Start here
 ---
 
 # Start here
 
-EagleEye runs on a coprocessor, usually a Raspberry Pi, next to your robot. It reads camera frames, runs a pipeline configured in the browser, and publishes timestamped robot poses to NetworkTables.
+Start with the image. Flash it, boot the Pi, and open
+[http://eagleeye.local:5001](http://eagleeye.local:5001). That is the normal EagleEye path.
+The SSH installer and manual node editor are advanced options.
 
-## What you will set up
+## First setup
 
-- EagleEye running as a service at `http://eagleeye.local:5001` or the device's IP address.
-- One or more calibrated USB cameras with saved robot-relative positions.
-- A bundled localization pipeline configured for your camera and field.
-- `EagleEyeCamera` feeding accepted vision observations into your WPILib pose estimator.
+1. [Flash the EagleEye image](./prepare-pi) to a Raspberry Pi 5.
+2. Boot it on Ethernet or configured Wi-Fi.
+3. Open [http://eagleeye.local:5001](http://eagleeye.local:5001) from a computer on the same
+network. Use the Pi's IP address if `.local` does not resolve.
+4. Follow [the setup wizard](./pipeline-setup) when your release provides it.
+5. Check [tested cameras](./tested-cameras) before choosing robot hardware.
+6. Verify the pose and NetworkTables output before driving.
 
-## Setup order
+:::warning Current-release status
+The source tree reviewed for this guide has no first-boot setup wizard yet. Its fresh pipeline is
+intentionally incomplete. Until a wizard ships, use [advanced manual pipeline setup](./advanced-pipeline-editor)
+after calibrating the camera and configuring NetworkTables.
+:::
 
-1. [Prepare the Raspberry Pi](./prepare-pi).
-2. [Install EagleEye](./install).
-3. [Open the UI](./open-the-ui).
-4. [Check your cameras](./cameras).
-5. [Calibrate intrinsics](./calibrate-intrinsics).
-6. [Configure extrinsics](./configure-extrinsics).
-7. [Connect NetworkTables](./networktables).
-8. [Create a localization pipeline](./pipeline-setup).
-9. [Add EagleEye to robot code](./robot-integration).
-10. [Add temporal acceleration](./temporal-acceleration) if the basic pipeline needs more throughput.
-11. [Verify and tune](./verify-and-tune).
+## What you need
 
-## WebUI tabs
+- Raspberry Pi 5, storage, power, and network access.
+- A UVC USB camera. Prefer a global-shutter camera for AprilTags. See [tested cameras](./tested-cameras).
+- A laptop on the same network for the web UI.
+- The current season's field map and a robot-side NetworkTables consumer.
 
-| Tab | Use |
-|-----|-----|
-| **Views** | Aim and focus camera feeds |
-| **3D View** | Compare the reported robot pose with the field |
-| **Pipeline** | Create a template pipeline, connect operations, and configure files |
-| **System** | Check pipeline state and device load |
-| **Settings** | Configure Wi-Fi, NetworkTables, managed assets, updates, logs, and terminal access |
-| **Utils** | Calibrate cameras and save their robot-relative transforms |
+## Advanced paths
 
-## Important distinctions
-
-**Robot Pose Output only updates the 3D view.** A separate **Publish To NetworkTables** node sends data to the robot. Bundled localization templates wire both paths correctly.
-
-**The robot library needs pose and metadata.** The default front-camera keys are `localization/front/pose` and `localization/front/meta` below the `EagleEye` table.
-
-**Intrinsics and extrinsics are separate.** Intrinsics describe the lens. Extrinsics describe where the camera sits on the robot. PnP and Camera To Robot Pose need both.
-
-**Managed file controls replace raw paths.** When a map or model is absent from a dropdown, use the adjacent **Manage** button to upload it.
-
-The [UI reference](./user-interface) covers individual controls. [Troubleshooting](./troubleshooting) starts from symptoms.
+- [Install over SSH](./install) for a stock Raspberry Pi OS setup.
+- [Manual pipeline editor](./advanced-pipeline-editor) for custom graphs or current releases without the wizard.
+- [User interface reference](./user-interface) for individual tabs and controls.
+- [Benchmarks](./benchmarks) for maintainer measurements and the record required for a rerun.
+- [License](./license) for noncommercial-use terms.

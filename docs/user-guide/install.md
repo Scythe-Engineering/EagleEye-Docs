@@ -1,11 +1,13 @@
 ---
-sidebar_position: 3
-title: Install EagleEye
+sidebar_position: 17
+title: "Advanced: install over SSH"
 ---
 
-# Install EagleEye
+# Advanced: install over SSH
 
-If you flashed the EagleEye image, the software and system service are already installed. Open `http://eagleeye.local:5001`. Use this page for a stock Raspberry Pi OS installation or to verify the service.
+The [EagleEye image](./prepare-pi) is the normal setup path. It already contains the software
+and service. Use this page only for stock Raspberry Pi OS, a clean upstream installation, or
+service repair.
 
 ## Install on stock Raspberry Pi OS
 

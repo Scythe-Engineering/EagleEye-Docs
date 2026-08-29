@@ -1,59 +1,40 @@
 ---
-sidebar_position: 4
-title: Open the UI
+sidebar_position: 3
+title: Open the web UI
 ---
 
-# Open the UI
+# Open the web UI
 
-The EagleEye web UI is served by the backend on port **5001**.
+The EagleEye web UI listens on port 5001. On the same network as the Pi, open:
 
-## 1. Open it in a browser
-
-On a laptop connected to the same network as the Pi:
-
-```
-http://<hostname>.local:5001
+```text
+http://eagleeye.local:5001
 ```
 
-for example `http://eagleeye.local:5001`, or use the IP address:
-`http://10.33.22.11:5001`. If you are working on the Pi itself with a browser,
-`http://localhost:5001` works too.
+If that name does not resolve, use `http://<pi-address>:5001`. On the Pi itself,
+`http://localhost:5001` also works.
 
-**Expected result:** the UI loads on the **Views** tab, with a navigation sidebar on the right
-listing Views, 3D View, Pipeline, System, Settings, and Utils.
+## What you should see
 
-![Views tab](/img/ui-screenshots/views-tab.png)
-
-## 2. Confirm the backend is alive
-
-Open the **System** tab. CPU, RAM, and storage numbers should update on their own every
-second or two — they stream from the backend, so movement means the connection is healthy.
+The current UI opens on **Views** and shows the navigation for Views, 3D View, Pipeline,
+System, Settings, and Utils. Confirm the backend is healthy in **System**. Its CPU, RAM, and
+storage values should update continuously.
 
 ![System tab](/img/ui-screenshots/system-tab.png)
 
-**Expected result:** metrics change over time and the pipeline list shows at least the
-pipelines in your config.
-
-## 3. Look at the log once
-
-Open the **Settings** tab and read the **System Logs** panel from the top. On a healthy first
-start you will see initialization lines, a list of detected inference devices, and camera
-detection lines.
-
-**Expected result:** no repeating `Traceback` blocks.
+:::note Wizard status
+A first-boot wizard is planned but is not present in the source tree reviewed for this guide.
+Do not expect a redirect or wizard screen on a current image. Use the
+[advanced manual pipeline setup](./advanced-pipeline-editor) when needed.
+:::
 
 ## If the page does not load
 
 | Symptom | Check |
-|---------|-------|
-| Browser cannot connect | `systemctl status eagleeye` on the Pi; `ss -tlnp \| grep 5001` should show the port listening |
-| Page loads but is blank | The web UI build may be missing — see [Troubleshooting](./troubleshooting#the-ui-loads-blank) |
-| `.local` name fails | Use the IP address instead; mDNS is often blocked on event networks |
-| Loads on the Pi but not from your laptop | Firewall or a different subnet — confirm both devices are on the same network |
+|---|---|
+| Browser cannot connect | Run `systemctl status eagleeye` on the Pi. `ss -tlnp \| grep 5001` should show the port listening. |
+| `.local` name fails | Use the Pi's IP address. mDNS is often blocked on event networks. |
+| Page loads but is blank | See [Troubleshooting](./troubleshooting#the-ui-loads-blank). |
+| Loads on the Pi but not your laptop | Confirm both devices are on the same network and subnet. |
 
-Next: [Check your cameras](./cameras).
-
-:::note
-Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). The port is
-fixed at 5001 in the backend.
-:::
+Next, check [tested cameras](./tested-cameras) and the live camera feed in [Views](./cameras).

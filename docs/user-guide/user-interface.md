@@ -5,9 +5,9 @@ title: User Interface Reference
 
 # User interface reference
 
-Reference for every tab and control in the EagleEye web UI, served at
-`http://<device-address>:5001`. For step-by-step setup, start at
-[Start Here](./overview).
+Reference for the current EagleEye web UI, served at `http://<device-address>:5001`. Start
+with [Start here](./overview). The planned setup wizard is not present in the source tree
+reviewed for this guide, so this page does not describe completed wizard screens or controls.
 
 The large panel on the left holds the current tool. Six tabs stay in the navigation on the
 right:
@@ -18,14 +18,14 @@ right:
 |-----|---------|
 | **Views** | Live camera thumbnails |
 | **3D View** | Field and robot pose visualization |
-| **Pipeline** | Build and edit pipelines |
+| **Pipeline** | Advanced manual pipeline editing |
 | **System** | CPU, memory, storage, pipeline states |
 | **Settings** | Backend configuration, logs, terminal, system tools |
 | **Utils** | Camera calibration and extrinsics |
 
-Start in **Views** to check the camera. Use **Pipeline** to build the graph. Open
-**Settings** for device and network controls, then use **System** to confirm the pipeline is
-running. **Utils** holds camera calibration and placement.
+Start in **Views** to check the camera. **Utils** holds camera calibration and placement.
+Use **Settings** for device and network controls, then **System** to confirm a pipeline is
+running. Use **Pipeline** only for [advanced manual setup](./advanced-pipeline-editor).
 
 ---
 
@@ -77,7 +77,10 @@ corner shows scene statistics and frame rate.
 
 ---
 
-## Pipeline
+## Pipeline editor, advanced
+
+Use this tab when the setup wizard is unavailable or when you need a custom graph. For the
+current manual path, see [Advanced: manual pipeline setup](./advanced-pipeline-editor).
 
 ![AprilTag pipeline at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-temporal-input-closeup.png)
 
@@ -88,7 +91,7 @@ The pipeline editor.
 - **Canvas:** nodes and connections.
 - **Operations list:** drag operations onto the canvas.
 - **Operation settings:** opens when you click a node.
-- **Pipeline dropdown:** switch pipelines; **New Pipeline** creates one from a blank graph or bundled template.
+- **Pipeline dropdown:** switch pipelines; **New Pipeline** creates a graph for manual editing.
 
 ### Working with the graph
 
@@ -104,8 +107,6 @@ The pipeline editor.
 
 If the context menu reads **Cannot Set Default**, that target port does not accept a default
 connection.
-
-When creating a pipeline, choose **Basic localization**, **AprilTag localization**, **Object detection (CPU)**, or **Object detection (MX3)** to start from a wired graph. EagleEye generates fresh node IDs for every copy.
 
 File parameters have a dropdown and **Manage** control. Use **Manage → Upload File**, close the manager, and select the uploaded file. This is the normal workflow for field maps, models, and other operation assets; raw `{project_root}` paths are for development and imported legacy configurations.
 
@@ -263,6 +264,12 @@ then check the service.
 ## Settings
 
 ![Settings tab](/img/ui-screenshots/settings-tab.png)
+
+### Setup wizard
+
+A first-boot setup wizard is planned, but it is not implemented in the source tree reviewed for
+this guide. When it ships, document its actual entry point, screens, generated pipeline choices,
+and verification result here. Until then, use the [advanced manual pipeline setup](./advanced-pipeline-editor).
 
 ### General
 

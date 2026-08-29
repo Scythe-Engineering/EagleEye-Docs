@@ -142,6 +142,10 @@ const config = {
                 to: "/docs/user-guide/troubleshooting",
               },
               {
+                label: "Benchmarks",
+                to: "/docs/user-guide/benchmarks",
+              },
+              {
                 label: "License",
                 to: "/docs/user-guide/license",
               },

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 9
 title: Connect NetworkTables
 ---
 
@@ -27,7 +27,7 @@ The status indicator beside the address should report a connection. If it does n
 
 ## 2. Use the localization contract
 
-The bundled localization templates publish two timestamp-matched values:
+A manual localization pipeline should publish two timestamp-matched values:
 
 | Full topic | Type | Contents |
 |------------|------|----------|
@@ -39,7 +39,7 @@ In **Publish To NetworkTables**, `target_key` is relative to the `EagleEye` tabl
 The pose and metadata publishers must remain on single-input paths from the same PnP solve. EagleEye carries the capture timestamp through both paths, and the robot library joins the values by exact timestamp.
 
 :::warning Robot Pose Output is not a publisher
-**Robot Pose Output** updates the WebUI 3D view. Only **Publish To NetworkTables** writes to NetworkTables. The templates connect both independently so the 3D view cannot suppress repeated stationary poses from the robot.
+**Robot Pose Output** updates the WebUI 3D view. Only **Publish To NetworkTables** writes to NetworkTables. In a manual pipeline, connect both independently so the 3D view cannot suppress repeated stationary poses from the robot.
 :::
 
 ## 3. Verify the topics
@@ -60,7 +60,7 @@ Unsupported values pass to downstream pipeline nodes but are not published.
 
 ## Reading robot values in EagleEye
 
-**Get NetworkTables Value** reads a robot key into a pipeline. One planned use is supplying gyro yaw to constrained PnP. The solver supports yaw input, but the shipped localization templates do not enable that connection yet.
+**Get NetworkTables Value** reads a robot key into a pipeline. One planned use is supplying gyro yaw to constrained PnP. The solver supports yaw input, but the current starter pipeline does not enable that connection.
 
 ## Troubleshooting
 
@@ -72,4 +72,4 @@ Unsupported values pass to downstream pipeline nodes but are not published.
 | Robot warns that a key is missing | Compare `EagleEyeCamera.forSource(...)` with both publisher `target_key` values |
 | Works over USB but not radio | Replace `172.22.11.2` with the normal team address |
 
-Next: [Build an AprilTag Pipeline](./pipeline-setup), then [Add EagleEye to robot code](./robot-integration).
+Next: use [the setup wizard](./pipeline-setup) when your release provides it. Otherwise, use [advanced manual pipeline setup](./advanced-pipeline-editor), then [add EagleEye to robot code](./robot-integration).

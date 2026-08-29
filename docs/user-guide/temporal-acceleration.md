@@ -1,9 +1,9 @@
 ---
-sidebar_position: 10
-title: Add Temporal Acceleration
+sidebar_position: 15
+title: "Advanced: temporal acceleration"
 ---
 
-# Add Temporal Acceleration
+# Advanced: temporal acceleration
 
 AprilTag detection spends most of its time scanning parts of the image where there are no
 tags. The **Temporal Acceleration Preprocessor Rust** node uses the last known camera pose and
@@ -24,8 +24,8 @@ Device Input ──frame──► Temporal Acceleration ──processed_frame─
                               └──────────────────────────────  PnP Camera Localization
 ```
 
-The rest of the pipeline from PnP onward is unchanged from
-[Build an AprilTag Pipeline](./pipeline-setup).
+The rest of the pipeline from PnP onward follows the
+[advanced manual pipeline setup](./advanced-pipeline-editor).
 
 The two close views below show the running graph at a readable scale. The dashed
 `camera_pose` line is the previous-frame feedback path.
