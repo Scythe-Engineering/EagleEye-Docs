@@ -19,7 +19,7 @@ close the wizard, or later want to change the generated setup, open **Settings**
 
 - Connect every camera you want to configure and make sure it appears in **Views**.
 - Keep each camera in the USB port it will use on the robot.
-- Have a printed ChArUco board and a tape measure ready.
+- Have the [recommended printed ChArUco board](./calibrate-intrinsics#1-print-the-recommended-charuco-board) and a tape measure ready.
 - Know the roboRIO address, usually `10.TE.AM.2` on the robot network.
 - For **Detect** only, upload or select a CPU-compatible model from the model library.
 

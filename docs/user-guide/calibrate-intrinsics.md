@@ -15,23 +15,28 @@ for the selected camera, or you can open it yourself. You do not need an externa
 Calibrate each camera separately. If you swap a camera or change its lens or resolution,
 calibrate again.
 
-## 1. Print a ChArUco board
+## 1. Print the recommended ChArUco board
 
-The calibration defaults expect a ChArUco board with:
+Download and print the [recommended letter-size ChArUco board](/downloads/eagleeye-charuco-board-letter.pdf).
+Print at **actual size**. Do not use "Fit to page" or any other scaling option.
 
-| Setting | Default |
-|---------|---------|
-| Squares X | 11 |
-| Squares Y | 8 |
-| Square size | 0.015 m |
-| Marker size | 0.011 m |
+For that board, enter these values in EagleEye:
+
+| Setting | Value |
+|---------|-------|
+| Squares X | 13 |
+| Squares Y | 10 |
+| Square m | 0.020 |
+| Marker m | 0.015 |
 | Marker dictionary | 4x4_50 |
 
-Print a board and then **measure the printed squares and markers with a ruler**. Printers
-scale. The numbers you enter in the UI must be the real printed sizes in meters, or every
-distance EagleEye reports will be wrong by that same scale factor.
+After printing, **measure a square and a marker with a ruler**. Printers can scale a page. If
+your measurements differ, enter the measured sizes in metres instead of the values above. The
+numbers in EagleEye must match the physical board, or every reported distance will have the same
+scale error.
 
-Tape the board flat to a rigid, flat surface. A curled sheet ruins the calibration.
+Tape the board flat to a rigid, flat surface. A curled sheet ruins the calibration. You can use
+a different board, but then enter that board's actual dimensions and dictionary.
 
 ## 2. Open the calibration tool
 
