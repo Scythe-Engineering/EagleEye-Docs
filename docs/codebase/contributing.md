@@ -40,11 +40,19 @@ on it. Address every issue it identifies before asking a maintainer to merge. Fi
 the finding is correct. If a finding needs a different resolution, explain that resolution in the
 review thread and make the needed change.
 
-## Changes that span repositories
+:::warning Write the discussion yourself
+AI-generated pull request descriptions and AI-generated comments can result in an immediate ban
+from contributing to EagleEye. File-change summaries are the exception. AI-assisted code is
+welcome, but maintainers expect to discuss real problems with a human contributor.
+:::
 
-For a significant backend or frontend change, check the development repository for matching work.
-If it needs a change too, open a PR there and link both PRs in each other's descriptions. That lets
-maintainers review and merge the related changes together.
+## Keep documentation current
+
+For a significant backend or frontend change, check the
+[EagleEye Docs repository](https://github.com/Scythe-Engineering/EagleEye-Docs) for outdated
+material that needs changing. If the documentation needs an update, open a PR there and link the
+EagleEye and documentation PRs in each other's descriptions. That lets maintainers review and
+merge the related changes together.
 
 Read [engineering principles](./overview#engineering-principles) before choosing an approach, and
 use [Develop EagleEye](./develop-eagleeye) or [Develop the documentation site](./develop-docs)
