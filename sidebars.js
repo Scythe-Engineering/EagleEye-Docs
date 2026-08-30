@@ -33,6 +33,14 @@ const sidebars = {
       items: [
         {
           type: "category",
+          label: "Development setup",
+          items: [
+            "codebase/develop-eagleeye",
+            "codebase/develop-docs",
+          ],
+        },
+        {
+          type: "category",
           label: "Architecture",
           link: { type: "doc", id: "codebase/architecture/overview" },
           items: [
