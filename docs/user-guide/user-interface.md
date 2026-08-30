@@ -334,11 +334,6 @@ Live backend log output, with a **Clear** button that clears the display.
 A terminal panel for running shell commands on the device without a separate SSH session:
 prompt, command input, **Send**, output area, and a clear button.
 
-:::note
-The terminal's behaviour was not exercised while writing this guide. If it does not respond,
-use SSH.
-:::
-
 ---
 
 ## Utils
