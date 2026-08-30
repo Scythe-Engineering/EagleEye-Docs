@@ -22,14 +22,14 @@ connection, generated pipelines, and published keys.
 
 | Address | Use |
 |---|---|
-| `10.TE.AM.2` | Normal robot network, such as `10.33.22.2` for team 3322 |
+| `10.TE.AM.2` | Normal robot network. Replace `TE.AM` with the digits of your FRC team number. Team 3322 uses `10.33.22.2`. |
 | `roborio-TEAM-frc.local` | Robot network when mDNS is reliable |
 | `172.22.11.2` | roboRIO over USB |
 | `127.0.0.1` | Simulation server on the same computer |
 
-If the verification panel says NetworkTables is disconnected, check the address, network path,
-and robot code, then click **Check again**. Do not click **Finish** until the required checks
-pass.
+The address comes from the **team number**, not the team name. If the verification panel says
+NetworkTables is disconnected, check the address, network path, and robot code, then click
+**Check again**. Do not click **Finish** until the required checks pass.
 
 ## Generated pipeline topics
 

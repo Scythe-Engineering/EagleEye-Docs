@@ -20,7 +20,7 @@ close the wizard, or later want to change the generated setup, open **Settings**
 - Connect every camera you want to configure and make sure it appears in **Views**.
 - Keep each camera in the USB port it will use on the robot.
 - Have the [recommended printed ChArUco board](./calibrate-intrinsics#1-print-the-recommended-charuco-board) and a tape measure ready.
-- Know the roboRIO address, usually `10.TE.AM.2` on the robot network.
+- Know your FRC team number. The normal roboRIO address is `10.TE.AM.2`, where `TE.AM` comes from that number. Team 3322 uses `10.33.22.2`.
 - For **Detect** only, upload or select a CPU-compatible model from the model library.
 
 ## 1. Choose the camera
@@ -103,9 +103,11 @@ The summary lists each saved camera and its purpose. Click **Add another camera*
 camera, calibration, position, and purpose steps. Each camera gets its own generated pipeline
 and NetworkTables source name. When the list is complete, click **Continue to NetworkTables**.
 
-The wizard opens **Settings** and highlights the Network Table section. Enter the roboRIO or
-simulation address in **Roborio (or sim) IP Address**, then click **Save Settings**. Click
-**Continue** in the guide only after the address is saved.
+The wizard opens **Settings** and highlights the Network Table section. For a robot, enter
+`10.TE.AM.2` in **Roborio (or sim) IP Address**, replacing `TE.AM` with your FRC team number.
+For example, team 3322 enters `10.33.22.2`. This address comes from the team number, not the
+team name. Click **Save Settings**, then click **Continue** in the guide only after the address
+is saved.
 
 ![NetworkTables guide in Settings](/img/ui-screenshots/wizard/networktables-step.png)
 

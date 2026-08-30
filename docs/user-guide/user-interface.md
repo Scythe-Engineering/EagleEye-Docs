@@ -306,7 +306,7 @@ Click **Manage** next to **WiFi Networks**. Enter a password beside the network,
 
 | Control | Description |
 |---------|-------------|
-| **Roborio (or sim) IP Address** | roboRIO or simulation host address. A fresh install uses `localhost`; replace it. See [Connect NetworkTables](./networktables) |
+| **Roborio (or sim) IP Address** | roboRIO or simulation host address. On a robot network, enter `10.TE.AM.2` using your FRC team number, for example `10.33.22.2` for team 3322. A fresh install uses `localhost`; replace it. See [Connect NetworkTables](./networktables). |
 | **Status indicator** | Current NetworkTables connection state; reads `Unknown` before the first connection |
 
 ### Views
