@@ -5,8 +5,9 @@ title: Check your cameras
 
 # Check your cameras
 
-Read [tested cameras](./tested-cameras) before buying hardware. EagleEye has no documented
-model validation record yet, so test the exact camera and USB arrangement planned for the robot.
+Use a UVC USB camera and test the exact camera and USB arrangement planned for the robot. A
+global-shutter sensor is the better choice for AprilTags because fast rotation cannot skew its
+image rows the way a rolling-shutter sensor can.
 
 EagleEye detects USB cameras when the backend starts. After plugging in, unplugging, or moving a
 camera, open **Settings**, scroll to the buttons at the bottom of Backend Settings, and click

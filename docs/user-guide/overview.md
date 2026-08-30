@@ -18,14 +18,13 @@ network. Use the Pi's IP address if `.local` does not resolve.
 4. Run [the setup wizard](./pipeline-setup) for each camera.
 5. In the wizard, set the roboRIO address, generate the pipelines, and pass live verification in
 3D View.
-6. Check [tested cameras](./tested-cameras) before standardizing robot hardware.
 
 If you skipped the wizard, open **Settings** and click **Open** next to **Camera setup wizard**.
 
 ## What you need
 
 - Raspberry Pi 5, storage, power, and network access.
-- A UVC USB camera. Prefer a global-shutter camera for AprilTags. See [tested cameras](./tested-cameras).
+- A UVC USB camera. Prefer a global-shutter camera for AprilTags, and test the exact camera and USB layout planned for the robot.
 - A laptop on the same network for the web UI.
 - A printed ChArUco board, a tape measure, and the current season's field map.
 - A roboRIO address. For detection-only setup, a CPU-compatible model in the model library.
