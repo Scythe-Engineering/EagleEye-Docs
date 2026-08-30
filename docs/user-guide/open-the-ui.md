@@ -5,7 +5,8 @@ title: Open the web UI
 
 # Open the web UI
 
-The EagleEye web UI listens on port 5001. On the same network as the Pi, open:
+Connect the Pi to the robot Wi-Fi, then connect your laptop to that same robot network. Open the
+web UI from the laptop through the robot network. The EagleEye web UI listens on port 5001:
 
 ```text
 http://eagleeye.local:5001
