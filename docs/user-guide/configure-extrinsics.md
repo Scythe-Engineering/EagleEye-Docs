@@ -22,10 +22,12 @@ robot code treats as the robot origin — usually the center of the drivetrain f
 
 ## 1. Open the camera config
 
+The setup wizard opens this page with the selected camera already chosen. Otherwise:
+
 1. Open the **Utils** tab.
 2. Select the camera in the **Camera** dropdown.
 
-![Utils tab](/img/ui-screenshots/utils-tab.png)
+![Camera Config Utils with the camera-position guide](/img/ui-screenshots/wizard/camera-position.png)
 
 ## 2. Fill in the fields
 
@@ -83,10 +85,4 @@ Each camera has its own extrinsics. Do all of them now, while you have the tape 
 | Robot appears to float above or sink below the field | Z offset wrong, or measured to the wrong reference | Measure lens height from the floor |
 | Values reset after restart | Save not clicked, or wrong camera selected when saving | Re-enter and click **Save Extrinsics** with the right camera selected |
 
-Next: [Connect NetworkTables](./networktables).
-
-:::note
-Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). The stored
-extrinsics fields are exactly pitch, yaw, roll, and the X/Y/Z offsets — there are no field of
-view fields.
-:::
+Next: [Connect NetworkTables](./networktables), or click **Continue** in the wizard guide.

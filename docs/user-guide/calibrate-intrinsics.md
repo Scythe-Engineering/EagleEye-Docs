@@ -9,8 +9,8 @@ Intrinsics describe the camera's lens: focal length, image center, and distortio
 needs them to turn a tag in the image into a distance and angle. Without intrinsics, the PnP
 and temporal acceleration nodes refuse to start.
 
-EagleEye has a built-in ChArUco calibration tool in the **Utils** tab. You do not need an
-external service.
+EagleEye has a built-in ChArUco calibration tool in the **Utils** tab. The setup wizard opens it
+for the selected camera, or you can open it yourself. You do not need an external service.
 
 Calibrate each camera separately. If you swap a camera or change its lens or resolution,
 calibrate again.
@@ -54,8 +54,8 @@ calibration.
 
 ## 4. Capture frames
 
-Hold the board in view and click **Capture** for each pose. Aim for **15 to 25 frames** that
-differ from each other:
+Hold the board in view and click **Capture** for each pose. EagleEye recommends at least **10**
+frames. Collect more if coverage is poor. Aim for frames that differ from each other:
 
 - Board centered, filling most of the frame.
 - Board in each corner of the frame.
@@ -66,18 +66,17 @@ differ from each other:
 Hold still for each capture. Motion blur is the most common cause of a bad calibration.
 
 **Expected result:** the status text confirms the capture and the frame appears in the
-captured-frames list. If a capture is rejected, the board was not found. Move closer, add
-light, or reduce glare.
+captured-frames list. You can also press <kbd>Space</kbd> or <kbd>C</kbd> to capture. If a frame
+is rejected, the board was not found. Move closer, add light, or reduce glare.
 
 The upper preview marks every detected ChArUco corner. The lower plot shows where the captured
 corners cover the image. Spread captures across that plot instead of collecting many nearly
 identical views in the center.
 
-![Live ChArUco detections, six captured frames, and their corner coverage](/img/ui-screenshots/calibration-live-coverage.png)
+![ChArUco calibration with captured frames and the corner-coverage plot](/img/ui-screenshots/wizard/calibration-capture.png)
 
 Use **Reset** to throw away all captures and start over. You can delete individual frames from
-the captured-frame list if one was blurry. The tool accepts at least three valid frames; collect
-10 or more varied frames for a dependable calibration.
+the captured-frame list if one was blurry. The tool requires valid frames; collect at least 10 varied frames for a dependable calibration.
 
 ## 5. Run the calibration
 
@@ -120,9 +119,4 @@ The Utils tab also lets you:
 | Pose is jittery after calibrating | Too few or too similar frames | Recapture with more tilt and corner coverage |
 | Modal shows no video | Camera not streaming | Check the [Views tab](./cameras) first |
 
-Next: [Configure extrinsics](./configure-extrinsics).
-
-:::note
-Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). The default
-board parameters listed above are the backend defaults for the calibration endpoints.
-:::
+Next: [Configure extrinsics](./configure-extrinsics), or click **Continue** in the wizard guide.

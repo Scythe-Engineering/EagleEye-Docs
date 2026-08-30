@@ -6,8 +6,8 @@ title: Start here
 # Start here
 
 Start with the image. Flash it, boot the Pi, and open
-[http://eagleeye.local:5001](http://eagleeye.local:5001). That is the normal EagleEye path.
-The SSH installer and manual node editor are advanced options.
+[http://eagleeye.local:5001](http://eagleeye.local:5001). The first-boot wizard builds camera
+pipelines for you. The SSH installer and node editor are advanced options.
 
 ## First setup
 
@@ -15,27 +15,25 @@ The SSH installer and manual node editor are advanced options.
 2. Boot it on Ethernet or configured Wi-Fi.
 3. Open [http://eagleeye.local:5001](http://eagleeye.local:5001) from a computer on the same
 network. Use the Pi's IP address if `.local` does not resolve.
-4. Follow [the setup wizard](./pipeline-setup) when your release provides it.
-5. Check [tested cameras](./tested-cameras) before choosing robot hardware.
-6. Verify the pose and NetworkTables output before driving.
+4. Run [the setup wizard](./pipeline-setup) for each camera.
+5. In the wizard, set the roboRIO address, generate the pipelines, and pass live verification in
+3D View.
+6. Check [tested cameras](./tested-cameras) before standardizing robot hardware.
 
-:::warning Current-release status
-The source tree reviewed for this guide has no first-boot setup wizard yet. Its fresh pipeline is
-intentionally incomplete. Until a wizard ships, use [advanced manual pipeline setup](./advanced-pipeline-editor)
-after calibrating the camera and configuring NetworkTables.
-:::
+If you skipped the wizard, open **Settings** and click **Open** next to **Camera setup wizard**.
 
 ## What you need
 
 - Raspberry Pi 5, storage, power, and network access.
 - A UVC USB camera. Prefer a global-shutter camera for AprilTags. See [tested cameras](./tested-cameras).
 - A laptop on the same network for the web UI.
-- The current season's field map and a robot-side NetworkTables consumer.
+- A printed ChArUco board, a tape measure, and the current season's field map.
+- A roboRIO address. For detection-only setup, a CPU-compatible model in the model library.
 
 ## Advanced paths
 
 - [Install over SSH](./install) for a stock Raspberry Pi OS setup.
-- [Manual pipeline editor](./advanced-pipeline-editor) for custom graphs or current releases without the wizard.
+- [Manual pipeline editor](./advanced-pipeline-editor) for custom graphs and MX3 inference.
 - [User interface reference](./user-interface) for individual tabs and controls.
 - [Benchmarks](./benchmarks) for maintainer measurements and the record required for a rerun.
 - [License](./license) for noncommercial-use terms.

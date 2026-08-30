@@ -5,51 +5,46 @@ title: "Advanced: manual pipeline setup"
 
 # Advanced: manual pipeline setup
 
-Use this page only when the setup wizard is unavailable or when you need a custom graph. The
-current source tree ships an intentionally incomplete `2026_apriltag_starter` pipeline. It does
-not generate a ready-to-run camera pipeline for you.
+The first-boot wizard is the normal way to create a localization or CPU detection pipeline. Use
+the Pipeline editor when you need a custom graph, want to tune the generated graph, or need MX3
+inference.
 
-Before editing it, make sure the camera appears in [Views](./cameras), has
-[intrinsics](./calibrate-intrinsics) and [extrinsics](./configure-extrinsics), and EagleEye can
-reach the roboRIO through [NetworkTables](./networktables).
+Fresh installations start with an empty pipeline configuration. The wizard creates standard
+pipelines from the bundled AprilTag-localization and CPU object-detection templates.
 
-## Complete the starter pipeline
+## Start from a template
 
-1. Open **Pipeline** and select `2026_apriltag_starter`.
-2. In **Device Input**, set the camera bus ID for the connected camera. Set `frame_rotation` if
-the image is physically sideways or upside down.
-3. In **PnP Camera Localization**, select the current field's AprilTag map.
-4. In **Camera To Robot Pose**, select the same camera so EagleEye can use its saved
-extrinsics.
-5. Add and wire **Publish To NetworkTables** nodes for the robot pose and matching PnP metadata.
-Use unique keys per camera, such as `localization/front/pose` and
-`localization/front/meta`.
-6. Restart the backend when the editor requests it, then verify the 3D View and NetworkTables.
+1. Open **Pipeline**.
+2. Click **New Pipeline**.
+3. Choose the template that is closest to your goal.
+4. Give the pipeline a clear name and create it.
+5. Select the camera, calibration files, field map, model, and NetworkTables keys required by
+that graph.
+6. Restart the backend when the editor requests it, then check **System**, **3D View**, and your
+NetworkTables client.
 
-The starter's existing path is:
+For a standard camera, rerunning **Settings → Camera setup wizard → Open** is usually safer than
+hand-editing a generated graph. It repeats the camera setup and replaces the wizard's earlier
+generated pipelines while leaving unrelated pipelines alone.
 
-```text
-Device Input -> Detect AprilTags -> PnP Camera Localization
-                                     -> Camera To Robot Pose -> Robot Pose Output
-```
+## When to use this editor
 
-**Robot Pose Output** updates the 3D View. It does not publish to NetworkTables. Keep the pose
-publisher on a direct path from **Camera To Robot Pose** and the metadata publisher on the PnP
-result. The robot library joins pose and metadata by capture timestamp.
+- **MX3 inference.** The wizard creates CPU object-detection pipelines. Start from the MX3
+template and select a compatible MX3 model and device here.
+- **Custom processing.** Add filters, transforms, or special publishers the wizard does not ask
+about.
+- **Manual NetworkTables contract.** Use this when robot code expects custom topic names or the
+older pose-plus-metadata pair described in [Connect NetworkTables](./networktables).
 
-## Edit the node graph
+## Safe editing
+
+**Robot Pose Output** updates 3D View. It does not publish to NetworkTables. Add a separate
+**Publish To NetworkTables** node for every value the robot needs.
+
+Keep one source name per camera. Do not fuse camera poses in EagleEye before publishing them;
+let the robot pose estimator fuse measurements at their capture timestamps.
 
 The [user interface reference](./user-interface#pipeline-editor-advanced) lists graph controls,
-restart behavior, and the available operations. The [NetworkTables guide](./networktables)
-explains the pose and metadata contract.
-
-Use a separate pipeline and source name for every camera. Do not fuse camera poses in EagleEye
-before publishing them. The robot pose estimator can fuse measurements at their own capture
-timestamps.
-
-## Optional tuning
-
-[Temporal acceleration](./temporal-acceleration) can reduce AprilTag work after the basic
-pipeline is correct. Add it only after you have verified pose accuracy and measured the pipeline
-profile. Custom object-detection and MX3 graphs also belong here. Their wizard support still
-needs current-release documentation.
+restart behavior, and operations. [Temporal acceleration](./temporal-acceleration) is an
+advanced AprilTag optimization. Add it only after the basic pipeline is accurate and you have
+measured its profile.

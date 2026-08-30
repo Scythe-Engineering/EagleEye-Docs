@@ -16,17 +16,13 @@ If that name does not resolve, use `http://<pi-address>:5001`. On the Pi itself,
 
 ## What you should see
 
-The current UI opens on **Views** and shows the navigation for Views, 3D View, Pipeline,
-System, Settings, and Utils. Confirm the backend is healthy in **System**. Its CPU, RAM, and
-storage values should update continuously.
+A fresh image with no configured pipelines opens the **First-boot wizard**. Click **Start setup**
+to build the camera pipelines. The wizard takes you through calibration, camera position,
+pipeline purpose, NetworkTables, and live verification. Follow
+[Run the setup wizard](./pipeline-setup).
 
-![System tab](/img/ui-screenshots/system-tab.png)
-
-:::note Wizard status
-A first-boot wizard is planned but is not present in the source tree reviewed for this guide.
-Do not expect a redirect or wizard screen on a current image. Use the
-[advanced manual pipeline setup](./advanced-pipeline-editor) when needed.
-:::
+If EagleEye already has pipelines, it opens the normal UI. Use **Settings → Camera setup wizard
+→ Open** to start the wizard again.
 
 ## If the page does not load
 
@@ -37,4 +33,5 @@ Do not expect a redirect or wizard screen on a current image. Use the
 | Page loads but is blank | See [Troubleshooting](./troubleshooting#the-ui-loads-blank). |
 | Loads on the Pi but not your laptop | Confirm both devices are on the same network and subnet. |
 
-Next, check [tested cameras](./tested-cameras) and the live camera feed in [Views](./cameras).
+If the wizard cannot find a camera, connect it, restart the backend, then use **Refresh cameras**
+on the camera-selection step.

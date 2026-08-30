@@ -5,9 +5,8 @@ title: User Interface Reference
 
 # User interface reference
 
-Reference for the current EagleEye web UI, served at `http://<device-address>:5001`. Start
-with [Start here](./overview). The planned setup wizard is not present in the source tree
-reviewed for this guide, so this page does not describe completed wizard screens or controls.
+Reference for the EagleEye web UI, served at `http://<device-address>:5001`. Start with
+[Start here](./overview), then follow [the setup wizard](./pipeline-setup) for a new camera.
 
 The large panel on the left holds the current tool. Six tabs stay in the navigation on the
 right:
@@ -23,9 +22,10 @@ right:
 | **Settings** | Backend configuration, logs, terminal, system tools |
 | **Utils** | Camera calibration and extrinsics |
 
-Start in **Views** to check the camera. **Utils** holds camera calibration and placement.
-Use **Settings** for device and network controls, then **System** to confirm a pipeline is
-running. Use **Pipeline** only for [advanced manual setup](./advanced-pipeline-editor).
+The first-boot wizard opens **Utils**, **Settings**, and **3D View** at the right time. Outside
+the wizard, use **Views** to check the camera, **Utils** for calibration and placement, and
+**System** to confirm a pipeline is running. Use **Pipeline** only for
+[advanced manual setup](./advanced-pipeline-editor).
 
 ---
 
@@ -73,14 +73,20 @@ A 3D field scene with the robot drawn at the latest pose from **Robot Pose Outpu
 A loading overlay with a progress bar appears while assets download. A stats readout in the
 corner shows scene statistics and frame rate.
 
+During first-boot verification, a **Verify live output** panel appears here. It reports
+NetworkTables connection, generated-pipeline activity, and expected published keys. **Finish**
+becomes available only after the required checks pass. See
+[the verification step](./pipeline-setup#6-verify-live-output).
+
 3D assets are managed from **Settings → Robot and Field Files → Manage**. The manager uploads and deletes robot `.glb` files, field `.glb` files, and matching field maps. After upload, select the asset from the 3D View dropdown instead of entering a project path.
 
 ---
 
 ## Pipeline editor, advanced
 
-Use this tab when the setup wizard is unavailable or when you need a custom graph. For the
-current manual path, see [Advanced: manual pipeline setup](./advanced-pipeline-editor).
+Use this tab when you need a custom graph or MX3 inference. The setup wizard creates standard
+localization and CPU object-detection pipelines without using this editor. See
+[Advanced: manual pipeline setup](./advanced-pipeline-editor).
 
 ![AprilTag pipeline at a readable zoom](/img/ui-screenshots/pipeline-setup/apriltag-temporal-input-closeup.png)
 
@@ -267,9 +273,15 @@ then check the service.
 
 ### Setup wizard
 
-A first-boot setup wizard is planned, but it is not implemented in the source tree reviewed for
-this guide. When it ships, document its actual entry point, screens, generated pipeline choices,
-and verification result here. Until then, use the [advanced manual pipeline setup](./advanced-pipeline-editor).
+On a fresh image with no configured pipelines, EagleEye opens the first-boot wizard. It guides
+camera selection, intrinsics calibration, camera position, pipeline purpose, NetworkTables, and
+live verification. If you skip it or need to run it again, click **Open** next to **Camera setup
+wizard** in Backend Settings.
+
+The wizard stays on the relevant page while you work. Its calibration and camera-position guides
+open **Utils**. Its NetworkTables guide opens **Settings**. After it generates the pipelines and
+restarts the backend, it opens **3D View** for verification. See
+[Run the setup wizard](./pipeline-setup) for the complete procedure and generated-key names.
 
 ### General
 
