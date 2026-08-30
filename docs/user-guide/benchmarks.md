@@ -5,11 +5,6 @@ title: Benchmarks
 
 # Benchmarks
 
-These are maintainer measurements recorded in the 2026 improvement plan. They are useful as
-planning targets, not performance guarantees. The plan does not include the camera model, lens,
-resolution, model, commit, or complete pipeline configuration for any result. None has been
-reproduced on a current release for this page.
-
 | Workload | Maintainer measurement | Current-release reproduction |
 |---|---:|---|
 | Two-camera AprilTag localization with temporal acceleration | 120 FPS per camera | Pending |
