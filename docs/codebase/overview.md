@@ -2,6 +2,21 @@
 
 EagleEye Vision System ingests camera frames, routes them through configurable DAG pipelines, leverages heterogeneous compute devices, and exposes a WebUI for real-time control and monitoring.
 
+## Engineering principles
+
+EagleEye aims to be efficient, extendable, and simple enough for a beginner team to set up. It
+should cover the capabilities teams expect from Limelight and PhotonVision while keeping the
+normal path short and leaving advanced teams free to adapt pipelines to their needs.
+
+Keep additions aligned with that goal. Prefer small, maintainable changes over new layers of
+abstraction. Keep backend changes narrow and reliable. The backend must keep running through a
+match, so correctness and recovery there take priority over frontend polish. Frontend work still
+needs sound structure, but a visual or interaction issue is lower priority than a backend failure.
+
+Cybersecurity is generally out of scope for EagleEye's intended robot-network use. Do not add
+security work by default. Add it only when a concrete threat, deployment requirement, or explicit
+project requirement calls for it.
+
 ## Directory structure
 
 ```
