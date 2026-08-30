@@ -8,13 +8,13 @@ title: Check your cameras
 Read [tested cameras](./tested-cameras) before buying hardware. EagleEye has no documented
 model validation record yet, so test the exact camera and USB arrangement planned for the robot.
 
-EagleEye detects USB cameras at startup. Plug in every camera, then restart the backend:
+EagleEye detects USB cameras when the backend starts. After plugging in, unplugging, or moving a
+camera, open **Settings**, scroll to the buttons at the bottom of Backend Settings, and click
+**Restart Backend**. Wait for the page to reconnect before opening **Views** again.
 
-```bash
-sudo systemctl restart eagleeye
-```
+![Restart Backend button in Settings](/img/ui-screenshots/restart-backend-button.png)
 
-You can also select **Settings → Restart Backend**.
+Use `sudo systemctl restart eagleeye` over SSH only when the web UI is unavailable.
 
 ## Check the live feed
 
@@ -38,7 +38,7 @@ camera to another port can separate it from its calibration and pipeline setting
 
 | Symptom | Fix |
 |---|---|
-| No camera cards | Restart the backend after plugging in the camera. Try another cable or port. |
+| No camera cards | In **Settings**, click **Restart Backend** after plugging in the camera. Wait for the UI to reconnect, then try another cable or port. |
 | Card is black | Try another port. Some cameras need a powered hub. |
 | Settings no longer match | Return the camera to its labelled port, or configure it again. |
 | Two identical cameras are confused | Cover one lens and watch which Views card goes dark. |

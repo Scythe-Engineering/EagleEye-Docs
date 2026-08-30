@@ -67,10 +67,11 @@ the bus ID or [calibrate that camera](./calibrate-intrinsics).
 **Views shows a message instead of camera cards, or the Pipeline tab shows
 `No cameras configured`.**
 
-1. Cameras are detected at startup. After plugging anything in:
-   `sudo systemctl restart eagleeye`.
+1. Cameras are detected at startup. After plugging in or moving anything, open **Settings** and
+   click **Restart Backend**. Wait for the page to reconnect, then check **Views** again. Use
+   `sudo systemctl restart eagleeye` only if the web UI is unavailable.
 2. Confirm the OS sees them: `v4l2-ctl --list-devices`. If it does not, EagleEye will not
-   either — try another port or cable.
+   either. Try another port or cable.
 3. If `v4l2-ctl` is missing: `sudo apt install -y v4l-utils`, then restart the backend.
 4. Underpowered USB is a common cause with multiple cameras. Try a powered hub.
 

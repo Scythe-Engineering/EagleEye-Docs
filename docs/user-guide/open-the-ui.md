@@ -34,5 +34,5 @@ If EagleEye already has pipelines, it opens the normal UI. Use **Settings → Ca
 | Page loads but is blank | See [Troubleshooting](./troubleshooting#the-ui-loads-blank). |
 | Loads on the Pi but not your laptop | Confirm both devices are on the same network and subnet. |
 
-If the wizard cannot find a camera, connect it, restart the backend, then use **Refresh cameras**
-on the camera-selection step.
+If the wizard cannot find a camera, connect it, open **Settings**, click **Restart Backend**, and
+wait for the page to reconnect. Return to the camera-selection step and click **Refresh cameras**.
