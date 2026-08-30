@@ -85,7 +85,7 @@ const showcaseItems = [
     body: 'Connect Wi-Fi, read logs, restart the backend, or use the built-in terminal.',
     image: '/img/ui-screenshots/wifi-manager.png',
     alt: 'Wi-Fi Network Manager opened from the Settings tab',
-    to: '/docs/user-guide/connect-wifi#connect-from-the-web-ui-after-installation',
+    to: '/docs/user-guide/connect-wifi#connect-from-the-web-ui',
   },
   {
     title: 'See what each operation sees',
