@@ -1,13 +1,17 @@
 ---
-sidebar_position: 2.5
-title: Connect to Wi-Fi from a Robot Network
+sidebar_position: 17
+title: Connect to Wi-Fi
 ---
 
-# Connect to Wi-Fi from a Robot Network
+# Connect to Wi-Fi
 
-The installer needs internet access to download packages. If entering Wi-Fi details in
-Raspberry Pi Imager is inconvenient, use the robot network for the first SSH connection,
-then join an internet-connected Wi-Fi network or phone hotspot from the Pi.
+You do not need Wi-Fi for a first boot from the EagleEye image. Connect the Pi to the same
+Ethernet network as your laptop, then open `http://eagleeye.local:5001` and run the setup wizard.
+
+Use this page when the Pi needs internet for an [EagleEye update](./update-system), when you want
+to use a shop network or phone hotspot, or when you are installing from stock Raspberry Pi OS.
+If entering Wi-Fi details in Raspberry Pi Imager is inconvenient, use the robot network for the
+first SSH connection, then join an internet-connected Wi-Fi network or phone hotspot from the Pi.
 
 ## 1. Reach the Pi over the robot network
 
@@ -56,7 +60,7 @@ curl -I https://github.com
 ```
 
 If this returns HTTP headers, keep the Ethernet SSH session open and continue to
-[Install EagleEye](./install).
+[Install EagleEye](./install) or [Update EagleEye](./update-system).
 
 If it fails because the robot network remains the preferred internet route, give Wi-Fi a
 lower route metric:

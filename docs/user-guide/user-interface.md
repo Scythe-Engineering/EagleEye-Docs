@@ -290,14 +290,15 @@ restarts the backend, it opens **3D View** for verification. See
 | **Download Logs** | Saves the backend log file to your computer |
 | **Test Notifications** | Sends a test notification |
 | **Manage Networks** | Wireless network configuration for the device |
-| **Update System** | Runs the system/software update flow |
+| **Update System** | Checks out the selected branch, updates system packages, and restarts EagleEye. See [Update EagleEye](./update-system). |
 | **Manage Test Videos** | Manage recorded video files usable as camera sources for offline testing |
 | **Robot and Field Files → Manage** | Manage field and robot models used by the 3D View |
 
 #### Connect Wi-Fi
 
 Click **Manage** next to **WiFi Networks**. Enter a password beside the network, then click
-**Connect**. The connected row shows a green status label and a **Disconnect** button.
+**Connect**. The connected row shows a green status label and a **Disconnect** button. See
+[Connect to Wi-Fi](./connect-wifi) for SSH setup and internet-routing troubleshooting.
 
 ![Network Manager in the Settings tab with the network name pixelated](/img/ui-screenshots/wifi-manager.png)
 

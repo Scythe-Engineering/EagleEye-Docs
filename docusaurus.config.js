@@ -146,6 +146,10 @@ const config = {
                 to: "/docs/user-guide/benchmarks",
               },
               {
+                label: "Update EagleEye",
+                to: "/docs/user-guide/update-system",
+              },
+              {
                 label: "License",
                 to: "/docs/user-guide/license",
               },

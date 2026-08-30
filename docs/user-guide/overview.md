@@ -34,6 +34,8 @@ If you skipped the wizard, open **Settings** and click **Open** next to **Camera
 
 - [Install over SSH](./install) for a stock Raspberry Pi OS setup.
 - [Manual pipeline editor](./advanced-pipeline-editor) for custom graphs and MX3 inference.
+- [Update EagleEye](./update-system) for web UI and SSH update procedures.
+- [Connect to Wi-Fi](./connect-wifi) when the Pi needs internet access.
 - [User interface reference](./user-interface) for individual tabs and controls.
 - [Benchmarks](./benchmarks) for maintainer measurements and the record required for a rerun.
 - [License](./license) for noncommercial-use terms.

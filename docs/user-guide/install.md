@@ -1,5 +1,5 @@
 ---
-sidebar_position: 17
+sidebar_position: 18
 title: "Advanced: install over SSH"
 ---
 
@@ -22,9 +22,11 @@ Connect over SSH as the normal sudo-capable user that should own EagleEye. Do no
 )
 ```
 
-The installer checks the platform, clones EagleEye into `~/EagleEye-Vision-System`, installs system packages and toolchains, syncs Python dependencies, builds the WebUI and Rust extensions, and creates the `eagleeye` systemd service. It performs fresh installs only. Use **Settings → System Update** for an existing installation.
+The installer checks the platform, clones EagleEye into `~/EagleEye-Vision-System`, installs system packages and toolchains, syncs Python dependencies, builds the WebUI and Rust extensions, and creates the `eagleeye` systemd service. It performs fresh installs only. Use [Update EagleEye](./update-system) for an existing installation.
 
-The Pi needs internet access while installing. A competition robot network normally does not provide it.
+The Pi needs internet access while installing. A competition robot network normally does not
+provide it. Use [Connect to Wi-Fi](./connect-wifi) to join a shop network or phone hotspot over
+SSH when needed.
 
 ## Verify the service
 
@@ -52,6 +54,6 @@ http://<device-ip>:5001
 - Check internet access and rerun `sudo apt update`.
 - Check free storage with `df -h`.
 - If Rust extensions fail to build, inspect the installer output and [backend startup troubleshooting](./troubleshooting#backend-exits-at-startup).
-- If the target directory already exists, do not delete a working installation. Open **Settings → System Update** instead.
+- If the target directory already exists, do not delete a working installation. Use [Update EagleEye](./update-system) instead.
 
 Next: [Open the UI](./open-the-ui).
