@@ -21,16 +21,17 @@ recorded in `package-lock.json`.
 ## Run the site
 
 ```bash
-npm start
+npm run dev
 ```
 
-Docusaurus prints the local address when it finishes compiling. The site normally runs at
-`http://localhost:3000/EagleEye-Docs/`.
+`npm run dev` starts the Docusaurus development server with live reload. Docusaurus prints the
+local address when it finishes compiling. The site normally runs at
+`http://localhost:3000/EagleEye-Docs/`. `npm start` is an equivalent command.
 
 To view it from another computer on the same network:
 
 ```bash
-npm start -- --host 0.0.0.0
+npm run dev -- --host 0.0.0.0
 ```
 
 Docusaurus reloads the browser after Markdown, React, CSS, or static-asset changes. User-guide
