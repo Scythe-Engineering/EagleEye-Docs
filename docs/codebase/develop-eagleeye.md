@@ -48,8 +48,16 @@ npm run watch
 ```
 
 Keep the backend running on port 5001 and reload the page after Vite writes new static files.
-The Vite development server is useful for inspecting frontend output, but it does not proxy the
-EagleEye backend. Test the integrated UI through port 5001.
+
+To use Vite's development server and hot reload instead:
+
+```bash
+npm run dev
+```
+
+Vite serves the WebUI source at `http://localhost:5173`. It does not proxy the EagleEye backend,
+so use it to inspect frontend rendering and hot reload only. Test the integrated UI through the
+backend at port 5001.
 
 ## Run checks
 

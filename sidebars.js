@@ -37,6 +37,7 @@ const sidebars = {
           items: [
             "codebase/develop-eagleeye",
             "codebase/develop-docs",
+            "codebase/contributing",
           ],
         },
         {
