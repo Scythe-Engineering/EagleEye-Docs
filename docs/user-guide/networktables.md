@@ -22,6 +22,7 @@ EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a sim
 | `roborio-TEAM-frc.local` | Robot network when mDNS is reliable |
 | `172.22.11.2` | roboRIO over USB |
 | `127.0.0.1` | Simulation server on the same computer |
+| Simulation host LAN or Tailscale IP | Simulation on another computer reachable from EagleEye |
 
 The status indicator beside the address should report a connection. If it does not, ping the roboRIO from the coprocessor and confirm robot code is running.
 
@@ -36,7 +37,10 @@ The bundled localization templates publish two timestamp-matched values:
 
 In **Publish To NetworkTables**, `target_key` is relative to the `EagleEye` table. Enter `localization/front/pose`, not `EagleEye/localization/front/pose`.
 
-The pose and metadata publishers must remain on single-input paths from the same PnP solve. EagleEye carries the capture timestamp through both paths, and the robot library joins the values by exact timestamp.
+Pose translation uses corner-origin NWU meters; yaw is counterclockwise-positive.
+Use the [Java integration guide](./robot-integration) for estimator code and coordinate details.
+
+The pose and metadata publishers must remain on single-input paths from the same PnP solve. EagleEye carries the capture timestamp through both paths, and the robot library joins the values by exact timestamp. Publishers retain unchanged values at new timestamps; stationary observations must still reach the robot.
 
 :::warning Robot Pose Output is not a publisher
 **Robot Pose Output** updates the WebUI 3D view. Only **Publish To NetworkTables** writes to NetworkTables. The templates connect both independently so the 3D view cannot suppress repeated stationary poses from the robot.
@@ -68,8 +72,8 @@ Unsupported values pass to downstream pipeline nodes but are not published.
 |---------|-------|
 | Status never connects | Robot address, network path, and whether robot code is running |
 | `EagleEye` table exists but keys do not | Pipeline state and Publish To NetworkTables nodes |
-| Pose freezes while stationary | Pose publisher must connect directly to Camera To Robot Pose, not through Robot Pose Output |
-| Robot warns that a key is missing | Compare `EagleEyeCamera.forSource(...)` with both publisher `target_key` values |
+| Pose freezes while stationary | Check direct Camera To Robot Pose publishing and duplicate retention; inspect timestamps rather than position changes |
+| Robot warns that a key is missing | Compare both Java constructor keys with publisher `target_key` values |
 | Works over USB but not radio | Replace `172.22.11.2` with the normal team address |
 
 Next: [Build an AprilTag Pipeline](./pipeline-setup), then [Add EagleEye to robot code](./robot-integration).
