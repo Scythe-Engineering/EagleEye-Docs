@@ -31,26 +31,23 @@ robot code treats as the robot origin — usually the center of the drivetrain f
 
 | Field | Meaning | Units |
 |-------|---------|-------|
-| Pitch | Tilt up/down | degrees |
-| Yaw | Rotation left/right | degrees |
-| Roll | Rotation about the lens axis | degrees |
-| X Offset | Forward/back from robot center | meters |
-| Y Offset | Left/right from robot center | meters |
-| Z Offset | Height above the floor | meters |
+| Pitch | Positive tips a forward-facing camera down; rotation about +Y | degrees |
+| Yaw | Positive turns left; rotation about +Z | degrees |
+| Roll | Positive rotates the robot's left axis toward up; rotation about +X | degrees |
+| X Offset | Positive forward from robot origin | meters |
+| Y Offset | Positive left from robot origin | meters |
+| Z Offset | Positive up from robot origin | meters |
 
-A camera mounted dead center, 0.6 m up, 0.25 m ahead of center, aimed straight forward and
-level would be X `0.25`, Y `0`, Z `0.6`, pitch/yaw/roll all `0`.
+The mount uses robot NWU axes and rotation `Rz(yaw) Ry(pitch) Rx(roll)`.
+A level camera 0.25 m forward, 0.10 m left, and 0.60 m above the robot origin uses
+X `0.25`, Y `0.10`, Z `0.60`, with pitch/yaw/roll `0`. A forward camera tilted 15°
+up uses pitch `-15`.
 
-Angles are only about the mount. If the camera is physically rotated 90° in its bracket so the
-image is sideways, that is handled by `frame_rotation` on the Device Input node in the
-pipeline, not here.
-
-:::caution Check the signs, do not assume them
-Sign conventions for pitch, yaw, and the offsets are easy to get backwards. Enter your best
-guess, then confirm with the preview in the next step and with the on-field check in
-[Verify and Tune](./verify-and-tune). If the pose is mirrored or offset the wrong way,
-flip the sign of the field that matches the axis you are wrong on and re-test.
-:::
+Mount angles describe the physical camera pose. `frame_rotation` rotates image pixels;
+keep that setting consistent with the calibration and solver convention rather than using
+it to hide an incorrect mounting transform. The frontend preview and backend mounting
+compensation use the same signs. Verify measured values instead of guessing or applying
+extra sign flips in robot code.
 
 ## 3. Use the preview
 
@@ -78,15 +75,15 @@ Each camera has its own extrinsics. Do all of them now, while you have the tape 
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| Pose is offset by a fixed amount in one direction | An offset has the wrong sign or is measured from the wrong origin | Re-measure from robot center; try flipping the sign of that axis |
-| Pose is mirrored left/right | Yaw sign backwards | Negate yaw and re-test |
+| Pose is offset by a fixed amount in one direction | An offset has the wrong sign or is measured from the wrong origin | Re-measure from the robot origin using +X forward, +Y left, +Z up |
+| Pose is mirrored left/right | Mixed field/display conventions or incorrect mounting values | Check the NWU contract and measured mount; remove extra Java coordinate conversions |
 | Robot appears to float above or sink below the field | Z offset wrong, or measured to the wrong reference | Measure lens height from the floor |
 | Values reset after restart | Save not clicked, or wrong camera selected when saving | Re-enter and click **Save Extrinsics** with the right camera selected |
 
 Next: [Connect NetworkTables](./networktables).
 
 :::note
-Verified against EagleEye-Vision-System `main` at commit `c73a871` (2026-08-20). The stored
+Updated for the tested shared NWU mounting transform. The stored
 extrinsics fields are exactly pitch, yaw, roll, and the X/Y/Z offsets — there are no field of
 view fields.
 :::

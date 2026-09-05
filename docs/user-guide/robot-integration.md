@@ -29,6 +29,24 @@ Create a pipeline from **Basic localization** in the Pipeline tab. Configure the
 
 Both publishers must preserve the same capture timestamp. Do not put a multi-input operation between PnP and either publisher. For another camera, duplicate the pipeline and use another source name such as `localization/back`.
 
+Use the two-key constructor below for **Basic localization**. `forSource("localization/front")`
+also subscribes to `/detections`; use it only with a pipeline that publishes detections.
+The source name is an example: copy the actual publisher keys from your pipeline.
+
+## Coordinate contract
+
+| Quantity | Convention |
+| --- | --- |
+| Field position | Corner-origin NWU, meters: +X downfield, +Y left, +Z up |
+| Robot heading | Counterclockwise-positive yaw; WPILib angles are radians |
+| Published pose | Robot-origin `Pose3d`, after camera mounting compensation |
+| Estimator input | `Pose3d.toPose2d()` retains field X/Y and yaw |
+| WebUI display | Centered Y-up rendering; display conversions stay in the frontend |
+
+Keep odometry, vision, and the field map in the same field frame. Do not swap X/Y,
+negate Y/yaw, or apply the WebUI's centered display transform in Java. Do not change
+vision origin when alliance changes unless every estimator input uses that same frame.
+
 ## Add it to Drive.java
 
 Add the import and camera field to the subsystem that owns your pose estimator:
@@ -38,7 +56,7 @@ import frc.robot.vision.EagleEyeCamera;
 
 public class Drive extends SubsystemBase {
   private final EagleEyeCamera[] eagleEyeCameras = {
-    EagleEyeCamera.forSource("localization/front"),
+    new EagleEyeCamera("localization/front/pose", "localization/front/meta"),
   };
 
   // Existing drive fields, constructor, and methods...
@@ -63,10 +81,36 @@ For multiple cameras, add each source to the array:
 
 ```java
 private final EagleEyeCamera[] eagleEyeCameras = {
-  EagleEyeCamera.forSource("localization/front"),
-  EagleEyeCamera.forSource("localization/back"),
+  new EagleEyeCamera("localization/front/pose", "localization/front/meta"),
+  new EagleEyeCamera("localization/back/pose", "localization/back/meta"),
 };
 ```
+
+For a differential drive, use the same camera array and update your existing estimator
+with measured wheel distances before adding vision:
+
+```java
+@Override
+public void periodic() {
+  poseEstimator.update(gyro.getRotation2d(), leftDistanceMeters, rightDistanceMeters);
+  EagleEyeCamera.update(poseEstimator::addVisionMeasurement, eagleEyeCameras);
+}
+```
+
+For logging or custom processing, use `poll()` instead of `update()` on that camera
+in the same cycle; both drain its queue:
+
+```java
+for (var observation : eagleEyeCameras[0].poll()) {
+  poseEstimator.addVisionMeasurement(
+      observation.pose(), observation.timestampSeconds(),
+      EagleEyeCamera.standardDeviations(observation));
+  // Log observation.tagCount(), meanTagDistanceMeters(), and reprojectionErrorPixels().
+}
+```
+
+The SDK intentionally assigns heading a very large standard deviation by default,
+so a drivetrain with a trustworthy gyro primarily uses vision to correct translation.
 
 ## Why you do not subtract latency
 
@@ -84,13 +128,34 @@ Each metadata sample contains:
 [tagCount, meanTagDistanceMeters, reprojectionErrorPixels]
 ```
 
-The defaults reject observations with fewer than two tags, tags farther than 6 m, reprojection error above 2 px, or age above 0.5 seconds. Translation uncertainty grows with distance squared and falls as tag count rises. Tune the public static fields on `EagleEyeCamera` only after logging real field data.
+The defaults reject observations with fewer than two tags, tags farther than 6 m, reprojection error above 2 px, or age above 0.5 seconds. Future samples, non-finite pose/metric values, negative distance/error values, and non-integer tag counts are also rejected. Translation uncertainty grows with distance squared and falls as tag count rises. Tune the public static fields on `EagleEyeCamera` only after logging real field data.
+
+A connected topic does not guarantee an accepted measurement: for example, a 2.8 px
+observation is correctly rejected by the default 2 px gate. Inspect calibration, tag-map
+geometry, and raw metrics before changing limits. Public static limits affect every camera;
+a relaxed diagnostic stream is not evidence that measurements are safe to fuse.
+
+Pose and metadata must share the exact capture timestamp. The SDK carries unmatched
+samples across poll calls until they arrive or age out, and returns accepted observations
+in capture order. Publishers retain identical values at new timestamps, so a stationary
+robot still receives new measurements.
 
 ## Simulation
 
-Copy `EagleEyeCameraSim.java`, then create a publisher in simulation setup:
+For a complete runnable project with contract tests, open
+[`library/examples/localization-sim`](https://github.com/Scythe-Engineering/EagleEye-Vision-System/tree/main/library/examples/localization-sim).
+Run `./gradlew test build`, then **WPILib: Simulate Robot Code** with **Sim GUI** enabled.
+In AdvantageScope choose **File → Connect to Simulator → NetworkTables 4** and display
+`SmartDashboard/EagleEye`, including the `GroundTruth` object and the robot estimate.
+
+To add simulation to an existing robot project, copy `EagleEyeCameraSim.java`, then create a publisher in simulation setup:
 
 ```java
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.vision.EagleEyeCameraSim;
+
 private EagleEyeCameraSim frontCameraSim;
 
 @Override
@@ -114,6 +179,16 @@ public void simulationPeriodic() {
 
 The simulator publishes pose and metadata with one shared timestamp. It models field-of-view, range, dead zones, and configurable translation noise. It does not model pipeline latency or solver failures.
 
+Use the single-argument constructor `new EagleEyeCameraSim("localization/front")`
+for a plumbing-only test with fixed valid metadata and no tag-layout visibility model.
+Keep simulated and physical publishers on different source keys when both are running.
+A stationary room camera should not be fused with an unrelated moving drive simulation.
+
+When a remote coprocessor connects to desktop simulation, enter the **simulation host's
+reachable address** in EagleEye Settings, not the coprocessor's localhost. Leave an already
+connected backend running while testing Java. In AdvantageScope, check timestamps or an
+accepted-observation counter: a retained pose can remain visible after publishing stops.
+
 ## Troubleshooting
 
 | Symptom | Check |
@@ -124,4 +199,4 @@ The simulator publishes pose and metadata with one shared timestamp. It models f
 | Topics exist but no observations are accepted | Check tag count, range, reprojection error, and timestamp age |
 | Estimate jumps toward vision | Raise `EagleEyeCamera.translationStdDevBase` or tighten quality limits |
 
-The Java library and simulation path are implemented and tested in the repository. A physical roboRIO round-trip has not yet been documented as field-verified, so test this integration on your robot before competition.
+Desktop validation exercised exact live pose/metadata joins, Java X/Y/yaw preservation, and five independent remote heading/position fixtures. The runnable example includes the Java regression tests. A physical roboRIO round-trip has not yet been documented as field-verified, so test this integration on your robot before competition.

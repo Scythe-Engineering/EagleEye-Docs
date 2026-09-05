@@ -49,7 +49,7 @@ Interpreting what you see:
 | What you see | Almost always |
 |--------------|---------------|
 | Off by a constant offset in one axis | An extrinsics offset is wrong or has the wrong sign |
-| Moves the wrong direction, or mirrored | Yaw sign, or X/Y swapped in extrinsics |
+| Moves the wrong direction, or mirrored | Mixed NWU/display frames, extra Java sign flips, or incorrect measured extrinsics |
 | Off by a consistent percentage — one meter reads as 1.15 m | Printed ChArUco square size did not match what you typed during calibration |
 | Correct near, badly wrong far away | Weak intrinsics — recalibrate with more tilt and corner coverage |
 | Correct sometimes, wildly wrong occasionally | Single-tag estimates; raise `minimum_detections` or add Pose Outlier Filter Rust |
