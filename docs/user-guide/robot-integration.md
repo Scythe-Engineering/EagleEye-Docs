@@ -148,6 +148,15 @@ Run `./gradlew test build`, then **WPILib: Simulate Robot Code** with **Sim GUI*
 In AdvantageScope choose **File → Connect to Simulator → NetworkTables 4** and display
 `SmartDashboard/EagleEye`, including the `GroundTruth` object and the robot estimate.
 
+For a 3D check, add the raw `/EagleEye/localization/<source>/pose` **Pose3d** topic to
+an AdvantageScope **3D Field** tab. Compare X/Y/Z and roll/pitch/yaw with EagleEye's
+3D pose. The SDK's estimator measurement is **Pose2d**: it preserves X/Y/yaw and
+intentionally discards Z/roll/pitch. Displaying that measurement in 3D places it on
+the floor; it cannot validate camera height or tilt. A model that looks rotated while
+numeric poses agree can indicate an asset-axis mismatch. Do not compensate for a model
+orientation problem by adding 90° in Java or changing measured extrinsics.
+
+
 To add simulation to an existing robot project, copy `EagleEyeCameraSim.java`, then create a publisher in simulation setup:
 
 ```java
