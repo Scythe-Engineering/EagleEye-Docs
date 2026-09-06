@@ -108,6 +108,19 @@ If fast motion moves tags outside the predicted regions, raise `padding_factor` 
 
 ## Troubleshooting
 
+The feedback must carry **PnP's camera pose**, before camera-to-robot mounting
+compensation. Robot Pose3d output and the centered Three.js display matrix are different
+contracts and must not be connected to this input. Both PnP and the preprocessor must use
+the same map, camera calibration, image resolution, and image rotation.
+
+If pose jitters while the camera is stationary, compare full-frame and cropped detections
+on the same images. Check whether the predicted regions actually exclude tag corners.
+If individual-tag solves agree with measured distance/tilt but the multi-tag solve does
+not, measure the map's tag-center spacing, tag orientation, and black-square size before
+changing coordinate signs or adding smoothing. A wrong map can produce a plausible but
+unstable compromise pose and misleading crop predictions.
+
+
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
 | Pipeline will not start after adding the node | No intrinsics for `camera_bus_id`, or a bus ID typo | [Calibrate intrinsics](./calibrate-intrinsics); check the bus ID matches Device Input |

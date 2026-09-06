@@ -32,10 +32,15 @@ Values are converted to wpimath geometry types (`Pose2d`, `Pose3d`, `Translation
 The topic type is chosen from the converted value the first time it publishes:
 
 ```python
-self.network_table.getStructTopic(self.target_key, type(wpi_value)).publish()
+options = ntcore.PubSubOptions(keepDuplicates=True, sendAll=True)
+self.network_table.getStructTopic(self.target_key, type(wpi_value)).publish(options)
 # or getStructArrayTopic / getDoubleTopic / getDoubleArrayTopic
 # / getBooleanTopic / getBooleanArrayTopic / getStringTopic / getStringArrayTopic
 ```
+
+All publisher types retain duplicate values and send all samples. Unchanged pose or quality
+values must still carry each new capture timestamp; suppressing duplicates breaks exact
+pose/metadata joins.
 
 Each sample is published with its source frame's capture time:
 

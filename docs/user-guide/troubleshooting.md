@@ -114,8 +114,8 @@ NetworkTables.**
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Constant offset in one direction | Extrinsics offset wrong or wrong sign | Re-measure from robot center; try flipping the sign |
-| Mirrored left/right | Yaw sign | Negate yaw |
+| Constant offset in one direction | Extrinsics offset wrong or wrong sign | Re-measure from robot origin using +X forward, +Y left, +Z up |
+| Mirrored left/right | Mixed field/display frames or incorrect mount | Check NWU axes and measured extrinsics; remove extra Java sign flips |
 | Scale error — one meter reads as 1.15 m | ChArUco square size typed in did not match the print | Measure the printed board, recalibrate |
 | Fine up close, bad far away | Weak intrinsics | Recalibrate with more tilt and corner coverage |
 | Occasional wild jumps | Single-tag estimates | Raise `minimum_detections`; add Pose Outlier Filter Rust |
