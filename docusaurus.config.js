@@ -151,8 +151,9 @@ const config = {
         copyright: `© ${new Date().getFullYear()} Scythe Engineering — EagleEye Vision System.`,
       },
       prism: {
-        theme: prismThemes.github,
-        darkTheme: prismThemes.dracula,
+        theme: prismThemes.vsLight,
+        darkTheme: prismThemes.vsDark,
+        additionalLanguages: ["java", "json", "python", "rust", "toml"],
       },
     }),
 };
