@@ -6,8 +6,10 @@ title: Check Your Cameras
 # Check Your Cameras
 
 EagleEye finds USB cameras automatically at startup. Plug in the cameras and restart the
-backend, then identify them in the setup wizard's preview grid. Give each camera a placement
-name and label its cable and USB port before continuing.
+backend. On a fresh install, identify them in the setup wizard's preview grid. On an existing
+install, the wizard does not open automatically after a restart. Reopen it from **Settings →
+General → Camera setup wizard → Open**, or identify cameras in **Views**. Give each camera a
+placement name and label its cable and USB port before continuing.
 
 ## How cameras are identified
 

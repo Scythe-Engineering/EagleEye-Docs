@@ -45,9 +45,13 @@ The navigation sidebar on the right lists Views, 3D View, Pipeline, System, Sett
 6. Save the camera setup, then use **Add another camera** to repeat for the remaining cameras.
 7. Continue to NetworkTables, enter the roboRIO or simulation host address in Settings,
    and use the guide's **Continue** button to generate pipelines and restart EagleEye.
-8. In 3D View, check the NetworkTables connection, active pipelines, and published keys.
-   Confirm the robot pose is correct before finishing. Then follow
-   [Add EagleEye to robot code](./robot-integration).
+8. Verify the result for the purpose you chose:
+   - For **Localize** or **Both**, in 3D View check the active pipeline and confirm the robot
+     pose is correct. Check the pose and metadata publishers in NetworkTables, then follow
+     [Add EagleEye to robot code](./robot-integration).
+   - For **Detect**, open Views or the pipeline live view and confirm that the expected
+     detections appear. Detect-only does not publish a robot pose, so no pose or robot-code
+     integration check is needed.
 
 The wizard currently uses the bundled 2026 REBUILT AprilTag map. For another field, change
 that map in the generated pipeline and restart before trusting its pose. See
