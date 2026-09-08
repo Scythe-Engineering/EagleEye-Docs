@@ -18,9 +18,50 @@ library/java/frc/robot/vision/EagleEyeCameraSim.java  # optional, for simulation
 
 Place them under `src/main/java/frc/robot/vision/`, or change their `package` declarations to match your project. They only depend on WPILib. There is no vendordep.
 
-## Configure the EagleEye pipeline
+## Configure EagleEye and find your source keys
 
-Create a pipeline from **Basic localization** in the Pipeline tab. Configure the camera and field map, then confirm these publishers remain connected directly to the PnP result:
+On a fresh installation, complete the [camera setup wizard](./open-the-ui#2-complete-first-time-camera-setup).
+Name each camera by placement, calibrate it, enter its mounting extrinsics, and select
+**Localize** or **Both**. Enter the roboRIO address, or the reachable simulation host address,
+at the NetworkTables step. The wizard generates one pipeline per configured camera and
+restarts EagleEye. Verify the field map and robot pose before using the measurements.
+
+If the wizard already generated a localization pipeline, use it. You do not need to create
+a second pipeline from a template. For manual setup instead, create **Basic localization**
+in the Pipeline tab and follow [Build an AprilTag pipeline](./pipeline-setup).
+
+### Display names are not subscription keys
+
+A name such as `Front bumper` is only a UI label. The wizard generates the source segment
+from the camera's hardware-derived name, adding a suffix when needed to distinguish cameras
+or avoid existing publisher keys. It does not use the placement description.
+
+To connect robot code to a generated pipeline:
+
+1. Open that pipeline in **Pipeline** and inspect its **Publish To NetworkTables** nodes.
+2. Copy the pose and metadata publishers' exact `target_key` values. They share a prefix
+   of `localization/<source>` and end in `/pose` and `/meta`.
+3. Check that both topics appear under the `EagleEye` table in AdvantageScope or OutlineViewer
+   while mapped AprilTags are visible.
+4. Use those two relative keys in the Java constructor below. Do not include the `EagleEye/`
+   table prefix.
+
+For example, if the publishers use `localization/usb-camera/pose` and
+`localization/usb-camera/meta`, the robot field is:
+
+```java
+private final EagleEyeCamera frontBumperCamera =
+    new EagleEyeCamera("localization/usb-camera/pose", "localization/usb-camera/meta");
+```
+
+`usb-camera` is an example, not a fixed wizard source ID. Copy the values from your pipeline.
+Renaming the camera later in **Settings → Camera Names** leaves these keys unchanged, so
+no robot-code edit is needed. If you manually edit publisher keys or generate another
+pipeline, check its keys again.
+
+### Check the publishers
+
+For localization, confirm these timestamp-preserving paths:
 
 | PnP output | NetworkTables key | Schema |
 |------------|-------------------|--------|
@@ -29,9 +70,14 @@ Create a pipeline from **Basic localization** in the Pipeline tab. Configure the
 
 Both publishers must preserve the same capture timestamp. Do not put a multi-input operation between PnP and either publisher. For another camera, duplicate the pipeline and use another source name such as `localization/back`.
 
-Use the two-key constructor below for **Basic localization**. `forSource("localization/front")`
-also subscribes to `/detections`; use it only with a pipeline that publishes detections.
-The source name is an example: copy the actual publisher keys from your pipeline.
+The remaining examples use `localization/front` for readability. Replace it with the exact
+prefix you copied from your pipeline, including any suffix. Use the two-key constructor for
+pose estimation from **Basic localization**, wizard **Localize**, or the pose output of **Both**.
+
+`forSource("localization/front")` also subscribes to `/detections`; use it only when all three
+matching topics are published. **Detect**-only wizard pipelines do not publish the pose/meta
+pair and cannot feed the pose-estimator integration below. Use Localize or Both if you want
+EagleEye robot-pose measurements.
 
 ## Coordinate contract
 
@@ -77,7 +123,8 @@ public void periodic() {
 
 Use your existing gyro and module-position expressions. The important ordering is odometry first, then EagleEye. Call this from `periodic()`, not a NetworkTables listener thread. `SwerveDrivePoseEstimator` is not thread-safe.
 
-For multiple cameras, add each source to the array:
+For multiple cameras, copy the distinct source prefix from each pipeline and add each
+pose/meta pair to the array. Do not derive these keys from the camera's display name:
 
 ```java
 private final EagleEyeCamera[] eagleEyeCameras = {
@@ -202,7 +249,8 @@ accepted-observation counter: a retained pose can remain visible after publishin
 
 | Symptom | Check |
 |---------|-------|
-| Driver Station warns that both keys are missing | Confirm EagleEye is connected to the roboRIO and the pipeline is running |
+| Driver Station warns that both keys are missing | Confirm the connection and pipeline state; copy its actual publisher keys rather than using the camera display name |
+| Camera was renamed but Java still uses the old source key | Expected: placement-name edits do not rename publisher keys or require robot-code changes |
 | Only the metadata key is missing | Connect a publisher to PnP `pose_meta` and use `localization/front/meta` |
 | Only the pose key is missing | Confirm Camera To Robot Pose feeds the `pose3d` publisher at `localization/front/pose` |
 | Topics exist but no observations are accepted | Check tag count, range, reprojection error, and timestamp age |

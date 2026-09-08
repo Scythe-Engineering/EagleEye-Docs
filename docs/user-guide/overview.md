@@ -16,14 +16,19 @@ EagleEye runs on a coprocessor, usually a Raspberry Pi, next to your robot. It r
 
 ## Setup order
 
+On a fresh installation, [opening the UI](./open-the-ui#2-complete-first-time-camera-setup)
+starts a wizard with a camera preview grid. Name cameras by placement, then follow its
+calibration, mounting, and NetworkTables steps to generate pipelines. You can then continue
+to robot-code integration. The individual guides below also cover manual setup and later edits.
+
 1. [Prepare the Raspberry Pi](./prepare-pi).
 2. [Install EagleEye](./install).
 3. [Open the UI](./open-the-ui).
-4. [Check your cameras](./cameras).
+4. [Identify and name your cameras](./cameras).
 5. [Calibrate intrinsics](./calibrate-intrinsics).
 6. [Configure extrinsics](./configure-extrinsics).
 7. [Connect NetworkTables](./networktables).
-8. [Create a localization pipeline](./pipeline-setup).
+8. [Check the generated pipeline or create one manually](./pipeline-setup).
 9. [Add EagleEye to robot code](./robot-integration).
 10. [Add temporal acceleration](./temporal-acceleration) if the basic pipeline needs more throughput.
 11. [Verify and tune](./verify-and-tune).
@@ -43,7 +48,10 @@ EagleEye runs on a coprocessor, usually a Raspberry Pi, next to your robot. It r
 
 **Robot Pose Output only updates the 3D view.** A separate **Publish To NetworkTables** node sends data to the robot. Bundled localization templates wire both paths correctly.
 
-**The robot library needs pose and metadata.** The default front-camera keys are `localization/front/pose` and `localization/front/meta` below the `EagleEye` table.
+**The robot library needs pose and metadata.** Manual templates default to
+`localization/front/pose` and `localization/front/meta` below the `EagleEye` table. The wizard
+assigns a source prefix per camera. Copy the actual publisher keys into robot code; a
+placement name such as `Front bumper` is only a UI label and does not rename those keys.
 
 **Intrinsics and extrinsics are separate.** Intrinsics describe the lens. Extrinsics describe where the camera sits on the robot. PnP and Camera To Robot Pose need both.
 

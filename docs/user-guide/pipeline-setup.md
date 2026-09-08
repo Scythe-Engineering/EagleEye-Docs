@@ -14,6 +14,22 @@ EagleEye includes two localization templates:
 
 Both publish the robot-library contract at `EagleEye/localization/front/pose` and `EagleEye/localization/front/meta`.
 
+## If you used the first-time wizard
+
+The [camera setup wizard](./open-the-ui#2-complete-first-time-camera-setup) already generates
+one pipeline per configured camera. With **Localize** or **Both**, it publishes the robot
+pose under `EagleEye/localization/<source>/pose` and quality metadata under the matching
+`/meta` key. Use that pipeline rather than creating a duplicate from a template.
+
+The wizard derives `<source>` from the hardware camera name and adds suffixes when needed.
+Your placement description is a UI label, not the source ID. Inspect the generated
+**Publish To NetworkTables** nodes and copy their `target_key` values into
+[robot code](./robot-integration#display-names-are-not-subscription-keys).
+
+The generated pipeline currently uses the bundled 2026 REBUILT AprilTag map. Follow
+[step 3](#3-select-or-upload-the-field-map) to select the correct map for another field,
+then restart and verify its pose. The steps below describe manual template setup.
+
 ## Before you start
 
 - The camera appears in Views.
@@ -39,6 +55,10 @@ Open these nodes and select the same camera in each:
 - **Device Input**
 - **PnP Camera Localization**
 - **Camera To Robot Pose**
+
+The selectors show saved placement descriptions, but store the camera's bus ID. To rename
+a label, use **Settings → Camera Names**. Renaming does not change the selected device,
+calibration, or publisher keys and does not require a restart.
 
 Set `frame_rotation` on Device Input if the camera is mounted sideways or upside down. Camera selection changes require a backend restart. Use the restart banner above the canvas after saving.
 
@@ -102,7 +122,9 @@ Continue with [Add EagleEye to robot code](./robot-integration).
 
 ## Multiple cameras
 
-Create one pipeline per camera. Give each pair of publishers its own source:
+Create one pipeline per camera. The wizard assigns distinct source prefixes automatically;
+keep those generated keys unless you intend to update the corresponding robot-code subscriptions.
+For manually created pipelines, give each pair of publishers its own source:
 
 ```text
 localization/front/pose
