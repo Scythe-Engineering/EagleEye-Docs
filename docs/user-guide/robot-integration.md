@@ -159,6 +159,76 @@ for (var observation : eagleEyeCameras[0].poll()) {
 The SDK intentionally assigns heading a very large standard deviation by default,
 so a drivetrain with a trustworthy gyro primarily uses vision to correct translation.
 
+## Optional enhancement: poll vision every 5 ms
+
+Start with the 20 ms integration above. To reduce the time vision waits for robot
+code to read it, move odometry and vision updates into a 5 ms callback. Use the same
+camera keys and `EagleEyeCamera` calls.
+
+### 1. Move the updates in Drive.java
+
+Move the odometry and EagleEye calls out of `Drive.periodic()` and into one public
+method:
+
+```java
+public void updateOdometryAndVision() {
+  poseEstimator.update(gyro.getRotation2d(), getModulePositions());
+  EagleEyeCamera.update(poseEstimator::addVisionMeasurement, eagleEyeCameras);
+}
+
+@Override
+public void periodic() {
+  // Keep dashboard updates and other subsystem work here.
+  // The 5 ms callback now handles odometry and vision.
+}
+```
+
+Replace `getModulePositions()` with your drivetrain's method for reading current
+module positions. Read the sensors on each call. Reusing positions cached by the
+20 ms loop won't give the estimator fresh odometry every 5 ms.
+
+For differential drive, pass measured left and right wheel distances to
+`poseEstimator.update()` along with the gyro angle.
+
+### 2. Schedule the method in Robot.java
+
+Add this call to your existing `Robot` constructor, after you create
+`robotContainer`:
+
+```java
+addPeriodic(robotContainer.getDrive()::updateOdometryAndVision, 0.005, 0.002);
+```
+
+Use your container's field name. If it has no `getDrive()` method, add one that
+returns the drive subsystem it already owns. The callback period is 5 ms, with a
+2 ms offset from the normal robot loop. Keep the command scheduler and the rest
+of the robot loop at 20 ms.
+
+`TimedRobot.addPeriodic` runs on the same thread as the normal robot callbacks.
+This path needs no extra thread or locks. Keep dashboard publishing, blocking
+waits, and expensive calculations out of `updateOdometryAndVision()` so it can
+finish within its 5 ms period.
+
+Remove the old odometry and vision calls from `Drive.periodic()`. Don't poll the
+same cameras from another callback or worker thread. If your drivetrain already
+updates odometry on a separate thread, add vision through that thread's existing
+estimator access rules instead of adding this callback.
+
+### Coprocessor setup and checks
+
+EagleEye requests a NetworkTables flush after all branches of a completed publishing
+pipeline finish. This reduces batching delay for both the 20 ms and 5 ms robot
+paths. It needs no extra ports or packages. NetworkTables still limits how often
+it sends data.
+
+The faster robot callback does not increase camera capture rate or sensor refresh
+rate. Check sample age, accepted observations, and loop overruns on your robot.
+Keep the SDK's stale-sample rejection enabled and check that vision resumes after
+a disconnect.
+
+To return to 20 ms updates, remove the `addPeriodic` call and call
+`updateOdometryAndVision()` once from `Drive.periodic()`.
+
 ## Why you do not subtract latency
 
 EagleEye carries the source-frame timestamp through the pipeline and publishes it with the pose. NetworkTables converts the coprocessor timestamp into the roboRIO server clock, which is the FPGA-time domain expected by `addVisionMeasurement`.
