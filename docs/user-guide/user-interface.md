@@ -23,9 +23,11 @@ right:
 | **Settings** | Backend configuration, logs, terminal, system tools |
 | **Utils** | Camera calibration and extrinsics |
 
-Start in **Views** to check the camera. Use **Pipeline** to build the graph. Open
-**Settings** for device and network controls, then use **System** to confirm the pipeline is
-running. **Utils** holds camera calibration and placement.
+A fresh installation opens the [camera setup wizard](./open-the-ui#2-complete-first-time-camera-setup),
+starting with a camera preview and placement-name grid. After setup, use **Views** for live
+video, **Pipeline** for the graph, and **System** to check that pipelines are running.
+**Settings** includes camera renaming and device controls. **Utils** holds calibration and
+mounting values.
 
 ---
 
@@ -268,6 +270,7 @@ then check the service.
 
 | Control | Description |
 |---------|-------------|
+| **Camera setup wizard → Open** | Reopens the guided camera naming, calibration, mounting, and pipeline setup flow |
 | **Download Logs** | Saves the backend log file to your computer |
 | **Test Notifications** | Sends a test notification |
 | **Manage Networks** | Wireless network configuration for the device |
@@ -282,6 +285,13 @@ Click **Manage** next to **WiFi Networks**. Enter a password beside the network,
 
 ![Network Manager in the Settings tab with the network name pixelated](/img/ui-screenshots/wifi-manager.png)
 
+### Camera Names
+
+The preview grid lists active cameras. Enter a **Placement description** and click
+**Save name** on its card. Names persist across reboots without changing camera bus IDs,
+calibration, feed URLs, or robot-code subscription keys. **Refresh previews** takes new
+snapshots; these are not live streams. See [Rename a camera later](./cameras#rename-a-camera-later).
+
 ### Network Table
 
 | Control | Description |
@@ -293,13 +303,13 @@ Click **Manage** next to **WiFi Networks**. Enter a password beside the network,
 
 | Control | Description |
 |---------|-------------|
-| **View stream downscale** | How much camera preview streams are shrunk before being sent to the browser. Lower values reduce bandwidth and CPU. This affects previews only; pipelines are unaffected |
+| **View stream downscale** | Shrinks live Views streams before sending them to the browser. Lower values reduce bandwidth and CPU. It does not change pipeline inputs or the small naming-grid snapshots |
 
 ### Actions
 
 | Control | Description |
 |---------|-------------|
-| **Save Settings** | Persists the settings above |
+| **Save Settings** | Persists the NetworkTables address and view stream downscale; camera descriptions have their own Save name buttons |
 | **Restart Backend** | Restarts the EagleEye backend process |
 | **Reboot Computer** | Reboots the whole device |
 

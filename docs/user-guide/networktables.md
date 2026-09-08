@@ -28,14 +28,23 @@ The status indicator beside the address should report a connection. If it does n
 
 ## 2. Use the localization contract
 
-The bundled localization templates publish two timestamp-matched values:
+The bundled localization templates publish two timestamp-matched values. These use `front`
+as the example source:
 
 | Full topic | Type | Contents |
 |------------|------|----------|
 | `EagleEye/localization/front/pose` | `Pose3d` struct | Robot pose in field coordinates |
 | `EagleEye/localization/front/meta` | `double[3]` | Tag count, mean tag distance in metres, and reprojection error in pixels |
 
-In **Publish To NetworkTables**, `target_key` is relative to the `EagleEye` table. Enter `localization/front/pose`, not `EagleEye/localization/front/pose`.
+Wizard-generated **Localize** and **Both** pipelines use the same `/pose` and `/meta`
+contract, but replace `front` with a source derived from the hardware camera name, with a
+suffix when needed. A placement description such as `Front bumper` does not become a topic
+name. Later name edits in **Settings → Camera Names** leave publisher keys unchanged.
+
+In **Publish To NetworkTables**, `target_key` is relative to the `EagleEye` table. Enter
+`localization/front/pose`, not `EagleEye/localization/front/pose`. For a generated pipeline,
+copy its actual pose and metadata `target_key` values into the Java constructor. See
+[Find your source keys](./robot-integration#display-names-are-not-subscription-keys).
 
 Pose translation uses corner-origin NWU meters; yaw is counterclockwise-positive.
 Use the [Java integration guide](./robot-integration) for estimator code and coordinate details.
@@ -48,7 +57,9 @@ The pose and metadata publishers must remain on single-input paths from the same
 
 ## 3. Verify the topics
 
-Use AdvantageScope, OutlineViewer, or your dashboard's NetworkTables viewer. With mapped tags visible, confirm both topics appear below `EagleEye` and update together.
+Use AdvantageScope, OutlineViewer, or your dashboard's NetworkTables viewer. With mapped tags visible, confirm both topics appear below `EagleEye` and update together. For wizard-generated
+pipelines, use the exact keys listed in the final verification panel or inspect the publisher
+nodes. Do not assume the source is `front` just because the camera's placement name says front.
 
 If pose appears without metadata, `EagleEyeCamera` drops it because it cannot choose measurement uncertainty. If metadata appears without pose, check the Camera To Robot Pose connection and pose publisher.
 
