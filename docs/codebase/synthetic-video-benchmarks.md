@@ -12,6 +12,8 @@ uv run python -m benchmarks run --dataset path/to/manifest.json --subset pilot \
   --pipeline both --output benchmark-results/pilot
 ```
 
+Add `--timeout SECONDS` for a quick pipeline evaluation. The timer uses elapsed wall-clock time, stops between frames, and still writes a partial report. Without it, the full selected dataset runs.
+
 The rendered Blender smoke test is opt-in:
 
 ```bash
