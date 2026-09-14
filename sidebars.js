@@ -92,7 +92,14 @@ const sidebars = {
             "codebase/data-systems/networktables",
           ],
         },
-        "codebase/testing",
+        {
+          type: "category",
+          label: "Contributing",
+          items: [
+            "codebase/testing",
+            "codebase/synthetic-video-benchmarks",
+          ],
+        },
       ],
     },
   ],
