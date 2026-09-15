@@ -4,6 +4,12 @@ EagleEye Vision System can render CAD-backed AprilTag footage and replay every f
 
 ## Run the benchmark
 
+The published dataset is split into two downloads.
+`EagleEye-current-benchmark-videos.zip` contains only videos.
+`EagleEye-current-benchmark-metadata.zip` contains `manifest.json` plus the
+calibration, ground-truth, and events files required by those videos. The
+benchmark command downloads and verifies both archives automatically.
+
 From an EagleEye Vision System checkout, verify a cached dataset and run both localization pipelines:
 
 ```bash
