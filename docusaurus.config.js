@@ -108,6 +108,11 @@ const config = {
             label: "Developer Docs",
           },
           {
+            to: "/benchmarks/",
+            position: "left",
+            label: "Benchmarks",
+          },
+          {
             href: "https://github.com/Scythe-Engineering/EagleEye-Vision-System",
             label: "GitHub",
             position: "right",
