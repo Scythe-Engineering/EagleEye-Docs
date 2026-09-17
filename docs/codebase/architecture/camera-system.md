@@ -100,6 +100,14 @@ Configs live under `src/utils/camera_utils/camera_calibrations/<camera_id>/`:
 - `intrinsics.json` — calibration output
 - `extrinsics.json` — `{"pitch": ..., "yaw": ..., "roll": ..., "x_offset": ..., "y_offset": ..., "z_offset": ...}`
 
+## Capture timestamp contract
+
+EagleEye wraps each captured frame in `TimedValue` with `TimingMetadata`. `capture_monotonic_ns` records the local monotonic capture time, and `capture_nt_us` records the same instant in the NetworkTables clock. Pipeline operations preserve this metadata, so `PublishToNetworktables` can publish the source capture time instead of the later processing time.
+
+V4L2 uses the kernel buffer timestamp when the driver reports a monotonic timestamp. If the driver does not provide one, the capture layer falls back to the time the frame is delivered and logs the fallback. OpenCV and video-file inputs also use delivery time. Cached frames keep their original timestamp and sequence number.
+
+Robot code must use the published timestamp directly as the vision measurement time. It must not subtract camera, pipeline, or NetworkTables latency a second time. See [Add EagleEye to robot code](../../user-guide/robot-integration) for the estimator integration.
+
 ## Camera readiness
 
 `CameraThreadManager.wait_for_all_cameras_ready()` polls every camera's ready flag (set when the first frame arrives) until a timeout. `MainBackend` logs a warning and continues to pipeline creation if the wait times out.

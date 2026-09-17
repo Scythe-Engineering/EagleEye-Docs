@@ -1,6 +1,6 @@
 # WebUI Overview
 
-The WebUI is a single-page application served by the Flask backend on port `5001`. It provides six tabs for operators to monitor and control the vision system in real time.
+The WebUI is a single-page application served by the Flask backend on port `5001`. It provides six tabs for operators to monitor and control the vision system in real time. `src/webui/web_server.py` creates `EagleEyeInterface`, registers the HTTP routes, and combines route handlers from `web_server_utils/`. The server provides the compiled page, JSON APIs, MJPEG streams, and a single-client server-sent event stream.
 
 ## Tabs
 
@@ -26,7 +26,7 @@ npm install
 npm run build
 ```
 
-Build output goes to `src/webui/static/` (`bundle.js`, `main.css`) and is served through the `/js/main.js`, `/style.css`, and `/assets/<path>` routes.
+Build output goes to `src/webui/static/` (`bundle.js`, `main.css`) and is served through the `/js/main.js`, `/style.css`, and `/assets/<path>` routes. The browser uses `EventSource` for `/sse/stream` and ordinary HTTP requests for changes. Flask initializes Socket.IO for backend compatibility, but the bundled frontend uses SSE.
 
 ## Core files
 
@@ -39,6 +39,10 @@ Build output goes to `src/webui/static/` (`bundle.js`, `main.css`) and is served
 | `src/webui/web_server_utils/drako_loader/` | Draco decoder assets for compressed 3D models |
 | `src/webui/assets/` | `background.webp`, `favicon.ico`, `no_image.png`, AprilTag images, robot and field models |
 | `src/webui/js/` | Frontend source |
+
+Assets under `src/webui/assets/` are served below `/assets/<path>`. Robot models live in `robots/`; field models live in `fields/<year>/field_files/`; optional game-piece models live in `game_pieces/`. A robot model may have a sibling `.metadata.json` file for display scale. AprilTag reference images use names such as `tag36_11_00000.webp`. The asset API handles listing, upload, deletion, and scale changes. Draco decoder files are generated at startup and served below `/draco/`, so they are not part of the source asset inventory.
+
+The server also serves `delete.svg`, `settings.svg`, `background.webp`, `favicon.ico`, and `no_image.png`. Keep season-specific field files below their year directory. URLs must preserve filenames containing spaces or punctuation.
 
 ## Real-time communication
 

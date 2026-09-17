@@ -12,6 +12,18 @@ Two connection types exist:
 
 Every operation node has a stable `uuid` (e.g. `op-mljk5q36-arwb`) that persists across pipeline editor saves and is used as the key in `FlowManager.operation_outputs`.
 
+An operation with several outputs returns a dictionary keyed by every declared output name. A dictionary remains one value on a connection; the scheduler does not split it into separate ports. Operations with indexed inputs or outputs use dynamic port groups. See [Dynamic port groups](./dynamic-port-groups).
+
+## Common localization chain
+
+A basic AprilTag localization graph is:
+
+```text
+Device Input -> Detect AprilTags -> PnP Camera Localization -> Camera to Robot Pose -> output
+```
+
+PnP returns a camera pose. Keep `camera_to_robot_pose` when the WebUI or a publisher needs the robot pose instead. See the operation reference for each node's inputs, outputs, and settings.
+
 ## Operation resolution
 
 When a pipeline is built, each `action_name` is resolved in this order:
@@ -40,6 +52,8 @@ These parameters are automatically passed to any operation constructor that decl
 ## Execution scheduling
 
 `FlowManager` computes the execution schedule at initialization time via a topological sort (forward pass) and a backward pass for finish timesteps. At runtime, operations are dispatched in timestep groups. If the schedule requires parallel execution, multiple `ThreadObject` workers run concurrently. Single-branch pipelines run on one thread with no synchronization overhead.
+
+The Pipeline Settings option **Limit frames to camera capture speed** starts another complete run only after every connected `device_input` in the named pipeline has published a new frame. It is enabled by default. Pipelines without `device_input` continue to run continuously. Changes take effect after a backend restart.
 
 See [Flow Manager](./flow-manager) for details.
 
