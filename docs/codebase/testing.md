@@ -2,7 +2,7 @@
 
 EagleEye uses pytest for its test suite. Tests live in `tests/` at the project root.
 
-For rendered end-to-end localization evaluation, see [Synthetic video benchmarks](synthetic-video-benchmarks.md). The benchmark's owning README contains the current commands and operational contract; ordinary pytest fixtures do not substitute for a clean run with real detector dependencies.
+For rendered end-to-end localization evaluation, see [Synthetic video benchmarks](synthetic-video-benchmarks). The benchmark page contains the current commands and operational contract; ordinary pytest fixtures do not substitute for a clean run with real detector dependencies.
 
 ## Running tests
 

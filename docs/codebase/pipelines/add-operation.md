@@ -51,6 +51,14 @@ class MyOpDefinition(OperationInstance):
         return self.impl.run(frame)
 ```
 
+## Runtime contract
+
+Implement `run(self, input_data)` and declare matching ports in the config definition. A single output can return any value, including a dictionary. Several outputs must return a dictionary keyed by every declared output name. A data-source operation receives `None` and sets `is_data_source` to `true`.
+
+An operation that consumes downstream feedback may implement `back_propagate_input(self, input_data) -> None`. The pipeline injects shared services only when their exact parameter names appear in the constructor. Do not request a service the operation does not use, and do not put injected services in `action_params`.
+
+Use [dynamic port groups](./dynamic-port-groups) when the number of ports depends on graph connections.
+
 ## 3. Add the config definition JSON
 
 The Pipeline Editor requires a config def file to render the parameter form and validate connections.
@@ -119,3 +127,7 @@ def update_config(self, json_config: dict) -> None:
         if hasattr(self, key):
             setattr(self, key, value)
 ```
+
+## Before submitting
+
+Check that constructor names match `action_params` and that config defaults match Python defaults. Return every declared output and handle invalid or missing inputs intentionally. Generate a pipeline, run a representative input through it, and check the operation's profiling output. Add an operation reference that documents its inputs, outputs, configuration, and real limitations.
