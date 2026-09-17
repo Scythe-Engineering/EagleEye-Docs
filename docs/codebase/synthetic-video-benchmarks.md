@@ -33,7 +33,7 @@ The code repository owns the full command and file format references:
 - [Accuracy benchmark README](https://github.com/Scythe-Engineering/EagleEye-Vision-System/blob/main/benchmarks/README.md)
 - [Blender generator README](https://github.com/Scythe-Engineering/EagleEye-Vision-System/blob/main/benchmarks/blender/README.md)
 
-The retained collection has six 30-second combined-realistic routes, totaling 21,600 frames at 1280x800 and 120 FPS. The renderer imports the 2026 field GLB, validates AprilTag mounting faces against the field map, checks robot and blocker clearance, and records camera, robot, blocker, and projected-corner truth. The renderer supports sparse preflight frames and resumable jobs. Packaging writes lossless FFV1 video and verifies every decoded pixel against the packaged source.
+The retained collection has six 30-second combined-realistic routes, totaling 21,600 frames at 1280x800 and 120 FPS. The renderer imports the 2026 field GLB, validates AprilTag mounting faces against the field map, checks robot and blocker clearance, and records camera, robot, blocker, and projected-corner truth. The renderer supports sparse preflight frames and resumable jobs. Packaging writes lightly compressed H.264 video at a 300 Mb/s target and verifies that every frame decodes.
 
 A three-frame clean recipe provides the sole opt-in rendered smoke check. Historical pilot recipes, effect-matrix rendering, and worker browser-preview tooling are not part of the maintained workflow.
 
