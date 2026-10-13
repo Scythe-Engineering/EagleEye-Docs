@@ -22,6 +22,17 @@ Use this when the robot needs a pipeline result through NetworkTables. Choose an
 
 ## Timestamp behavior
 
-Timed values publish with their `capture_nt_us` NetworkTables timestamp. Nested selection preserves that timing. Untimed values use publish time. Robot-side pose estimators need capture time rather than later processing time.
+Timed values retain their `TimingMetadata.capture_nt_us` timestamp in **microseconds**, regardless of the installed RobotPy version. Nested selection preserves that timing. Untimed values use publish time. Robot-side pose estimators need capture time rather than later processing time.
+
+At the native publisher boundary, `wpilib_compat.to_nt_publish_time(capture_nt_us)` uses:
+
+| Coprocessor bindings | Native publisher timestamp | Clock epoch on Linux |
+| --- | --- | --- |
+| 2026 | `capture_nt_us` (microseconds) | Unix-epoch anchored NT clock |
+| 2027 alpha-7 | `capture_nt_us * 1000` (nanoseconds) | Steady/monotonic NT clock |
+
+`timing.now_nt_us()` normalizes the clock in the opposite direction. The capture adapter measures the NT-to-host-monotonic offset and checks the clock rate; alpha offsets may be near zero. Do not assume offset magnitude or reuse a Unix timestamp as an alpha NT timestamp.
+
+Pose and metadata from the same solve must receive the same capture timestamp. Publishers keep duplicate values and send all samples, so repeated stationary frames remain distinct. The NT4 wire format still uses microseconds; only the native alpha API boundary scales to nanoseconds. The Java SDK then converts its timestamp to seconds with `/1e6` (2026) or `/1e9` (alpha-7), under the robot's default time source. See [robot integration](../../../../user-guide/robot-integration#why-you-do-not-subtract-latency) for the custom `RobotController.setTimeSource` caveat.
 
 The first publish fixes the topic type. Changing `target_key` creates a new publisher. Changing `schema` alone does not recreate one already in use.

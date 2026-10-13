@@ -5,9 +5,9 @@ title: Connect NetworkTables
 
 # Connect NetworkTables
 
-EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a simulation host, is the server. Every pipeline publisher writes below the fixed `EagleEye` table.
+EagleEye joins NetworkTables as a client named `EagleEye`. The robot controller (roboRIO/Systemcore), or a simulation host, is the server. Every pipeline publisher writes below the fixed `EagleEye` table.
 
-## 1. Point EagleEye at the roboRIO
+## 1. Point EagleEye at the robot controller
 
 1. Open **Settings**.
 2. Under **Network Table**, enter the robot address.
@@ -15,6 +15,8 @@ EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a sim
 4. Restart the backend.
 
 ![Restart Backend and Reboot Computer controls in the Settings tab](/img/ui-screenshots/settings-restart-controls.png)
+
+### WPILib 2026 / roboRIO addresses
 
 | Address | Use |
 |---------|-----|
@@ -24,7 +26,15 @@ EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a sim
 | `127.0.0.1` | Simulation server on the same computer |
 | Simulation host LAN or Tailscale IP | Simulation on another computer reachable from EagleEye |
 
-The status indicator beside the address should report a connection. If it does not, ping the roboRIO from the coprocessor and confirm robot code is running.
+### WPILib 2027 alpha-7 / Systemcore
+
+Enter the controller's reachable address in the same setting. The roboRIO-specific hostname, radio, and USB examples above do not establish Systemcore addresses. Confirm the address and network route for your controller rather than substituting an assumed IP.
+
+The WPILib **2027 alpha-7** release requires Systemcore image **14** and Driver Station **alpha-7**; use the matching release tooling. These requirements are scoped to alpha-7. See the [alpha-7 release notes](https://github.com/wpilibsuite/allwpilib/releases/tag/v2027.0.0-alpha-7).
+
+A 2026 Python coprocessor can connect to an alpha-7 robot over NT4; keep the default coprocessor stack on Debian 12. Use the alpha-7 Java SDK in the robot project.
+
+The status indicator beside the address should report a connection. If it does not, verify connectivity from the coprocessor and confirm robot code is running.
 
 ## 2. Use the localization contract
 

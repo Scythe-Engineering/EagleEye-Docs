@@ -34,13 +34,16 @@ The whole body is wrapped in `try/except BaseException`, which calls `self.shutd
 ### 1. NetworkTables
 
 ```python
-network_tables_inst = ntcore.NetworkTableInstance.getDefault()
-network_tables_inst.startClient4("EagleEye")
-network_tables_inst.setServer(general_conf["network_table_address"])
-self.network_table = network_tables_inst.getTable("EagleEye")
+from src.utils import wpilib_compat as wpi
+
+network_tables_inst = wpi.default_instance()
+wpi.start_client(network_tables_inst, "EagleEye", general_conf["network_table_address"])
+self.network_table = wpi.get_table(network_tables_inst, "EagleEye")
 ```
 
-EagleEye is an NT4 *client* named `EagleEye`; the roboRIO (or whatever `network_table_address` points at) is the server. The tracked installation config starts at `localhost`; `0.0.0.0` is the fallback when the config file is absent. No schema manifest is published here.
+EagleEye is an NT4 *client* named `EagleEye`; the robot controller or simulation host at `network_table_address` is the server. The tracked installation config starts at `localhost`; `0.0.0.0` is the fallback when the config file is absent. No schema manifest is published here.
+
+The compatibility adapter validates matching 2026 or exact 2027 alpha-7 NT/math packages. Startup records the selected API and versions and measures the capture-to-NT clock offset before connecting. The timing check rejects a clock rate/unit mismatch rather than caching an invalid offset. Internal timing metadata stays in microseconds on both variants.
 
 ### 2. Devices, models, and MX3 runtime
 
