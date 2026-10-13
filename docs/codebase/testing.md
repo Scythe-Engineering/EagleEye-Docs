@@ -34,9 +34,9 @@ uv sync --locked --no-build --no-group wpilib2026 --group wpilib2027-alpha7
 uv run --no-sync pytest
 ```
 
-The `--no-sync` run preserves the selected environment. A plain `uv run` may restore default groups; alternatively repeat the alpha group flags on every run.
+The `--no-sync` run preserves the selected environment. A plain `uv run` may restore the default 2026 group. To avoid `--no-sync`, pass `--no-group wpilib2026 --group wpilib2027-alpha7` on every `uv run`.
 
-Compatibility coverage uses **real installed ntcore bindings** for elapsed clock scale, capture-to-NT offset agreement, loopback publication with equal pose/meta timestamps and duplicate frames, pipeline disable commands, connection/topic monitoring, and reading robot values. Adapter guards cover unsupported or mixed NT/math versions. Fakes remain useful for isolated flow tests but cannot prove native method names, timestamp scale, or transport interoperability.
+Compatibility tests use the **real installed ntcore bindings**. They check clock scale, capture-to-NT offset agreement, loopback publication with equal pose and metadata timestamps and duplicate frames, pipeline disable commands, connection and topic monitoring, and reading robot values. Adapter guards cover unsupported or mixed NT/math versions. Fakes remain useful for isolated flow tests but cannot prove native method names, timestamp scale, or transport interoperability.
 
 Java CI builds both `library/examples/localization-sim` with JDK 17 and `library/examples/localization-sim-2027` with JDK 25. Run the matching example's `./gradlew test build`. The alpha suite covers timestamp age/future rejection, default timer alignment, warning throttling, and simulator optional bearings as well as the localization contract. SDK parity is checked with:
 

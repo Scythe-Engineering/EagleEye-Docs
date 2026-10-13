@@ -24,6 +24,8 @@ The installer checks the platform, clones EagleEye into `~/EagleEye-Vision-Syste
 
 The Pi needs internet access while installing. A competition robot network normally does not provide it.
 
+Run the installer on the vision coprocessor, not on a robot controller. Running EagleEye on a Systemcore is not supported. See [Use EagleEye with Systemcore](./systemcore).
+
 ## WPILib coprocessor variants
 
 The installer defaults to **WPILib 2026**, as does the prebuilt Pi image. This stack also communicates with a WPILib 2027 alpha-7 robot over NT4. Choose the matching Java SDK separately in the [robot integration guide](./robot-integration#choose-the-wpilib-version-and-copy-the-library).

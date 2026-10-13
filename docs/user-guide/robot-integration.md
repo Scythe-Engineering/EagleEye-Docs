@@ -32,9 +32,9 @@ library/java-2027/frc/robot/vision/EagleEyeCameraSim.java  # optional, for simul
 
 Alpha-7 uses `org.wpilib.*` imports, including `org.wpilib.math.linalg.Matrix` and `VecBuilder`, `org.wpilib.math.geometry.*`, and `org.wpilib.networktables.*`. Keep your existing drivetrain/estimator code on the matching WPILib API; do not combine the two SDK trees in one project. The `frc.robot.vision.EagleEyeCamera` import below is unchanged.
 
-The default 2026 Python coprocessor communicates with alpha-7 Java robots over NT4. Changing the robot SDK does not require upgrading the coprocessor. See [installation variants](./install#wpilib-coprocessor-variants) before opting into alpha Python.
+Place the files under `src/main/java/frc/robot/vision/`, or change their `package` declarations to match your project. They only depend on WPILib. There is no vendordep.
 
-Place them under `src/main/java/frc/robot/vision/`, or change their `package` declarations to match your project. They only depend on WPILib. There is no vendordep.
+The default 2026 Python coprocessor communicates with alpha-7 Java robots over NT4. Changing the robot SDK does not require upgrading the coprocessor. See [installation variants](./install#wpilib-coprocessor-variants) before opting into alpha Python. For the controller image, Driver Station, team number, and address setup that an alpha-7 robot needs, see [Use EagleEye with Systemcore](./systemcore).
 
 ## Configure EagleEye and find your source keys
 
@@ -112,6 +112,8 @@ negate Y/yaw, or apply the WebUI's centered display transform in Java. Do not ch
 vision origin when alliance changes unless every estimator input uses that same frame.
 
 ## Add it to Drive.java
+
+These snippets show only the EagleEye calls. They apply to both SDKs, but the WPILib types in your own code (gyro, estimator, `SubsystemBase`) use the package names of your WPILib version. For a complete alpha-7 file, see the [alpha-7 example's `Robot.java`](https://github.com/Scythe-Engineering/EagleEye-Vision-System/blob/main/library/examples/localization-sim-2027/src/main/java/frc/robot/Robot.java).
 
 Add the import and camera field to the subsystem that owns your pose estimator:
 

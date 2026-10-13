@@ -4,7 +4,7 @@ EagleEye publishes processed vision data through two parallel output channels:
 
 | Channel | Consumer | Format | Transport |
 |---|---|---|---|
-| **NetworkTables** | Robot (roboRIO via WPILib) | wpimath struct and primitive topics | NT4 over LAN |
+| **NetworkTables** | Robot controller (roboRIO or Systemcore via WPILib) | wpimath struct and primitive topics | NT4 over LAN |
 | **SSE** | WebUI (browser) | JSON via Server-Sent Events | HTTP |
 
 These are independent — the robot and WebUI each receive data through their own path.

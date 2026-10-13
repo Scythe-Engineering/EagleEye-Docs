@@ -35,7 +35,7 @@ then restart and verify its pose. The steps below describe manual template setup
 - The camera appears in Views.
 - The camera has [intrinsics](./calibrate-intrinsics).
 - [Extrinsics](./configure-extrinsics) are saved for that camera.
-- [NetworkTables](./networktables) points at the roboRIO.
+- [NetworkTables](./networktables) points at the robot controller (roboRIO or Systemcore).
 - The field's AprilTag map is available in EagleEye.
 
 ## 1. Create the pipeline
