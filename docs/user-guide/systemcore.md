@@ -18,7 +18,7 @@ This guide follows the published WPILib and Systemcore alpha documentation as of
 | Item | Requirement for alpha-7 |
 | --- | --- |
 | Robot software | WPILib **2027.0.0-alpha-7** from the [allwpilib release](https://github.com/wpilibsuite/allwpilib/releases/tag/v2027.0.0-alpha-7). |
-| Java | JDK 25. The alpha-7 example project is built for Java 25. Use the JDK that the WPILib installer provides. |
+| Java | JDK 25. The alpha-7 example project is built for Java 25. Use the JDK that the WPILib installer provides. On macOS it is in `~/.wpilib/2027_alpha7/jdk`; to build from a terminal, run `export JAVA_HOME="$HOME/.wpilib/2027_alpha7/jdk"`. See [Choose the WPILib version](./robot-integration#choose-the-wpilib-version-and-copy-the-library) for the Linux and Windows install folders. |
 | Systemcore image | **14 or later.** The alpha-7 release notes say image 14 is required, and the compatibility table lists image 14 and later for WPILib alpha-7 and later. Images 10 to 13 pair with alpha-5 and alpha-6. |
 | Driver Station | The [2027 (FIRST) Driver Station](https://github.com/wpilibsuite/FirstDriverStation-Public). The alpha-7 release notes say Driver Station alpha-7 is required. |
 | Vendor libraries | Versions built for alpha-7. Alpha-6 and earlier vendordeps do not work with alpha-7. The SystemcoreTesting README lists compatible versions. EagleEye itself needs no vendordep. |
@@ -109,7 +109,7 @@ Work through these checks in order. Each one rules out a different failure.
 6. **No Driver Station warnings.** The SDK warns, at most once every five seconds, when a configured key has no publisher. If you see the warning, compare the keys in robot code with the pipeline's publishers.
 7. **The pose is right.** Place the robot at a known spot and compare the estimate with it. [Verify and tune](./verify-and-tune) covers this step.
 
-The alpha-7 example logs its field and its accepted count under `Telemetry/EagleEye` and `Telemetry/EagleEye/Accepted`. Those paths were checked in desktop simulation only. On a real Systemcore, look for the same names in your dashboard's NetworkTables tree, and expect them to differ if you use a custom telemetry backend.
+The alpha-7 example logs its field and its accepted count under `Telemetry/EagleEye` and `Telemetry/EagleEye/Accepted`. Those paths were checked in desktop simulation only, using Glass; AdvantageScope and Elastic were not tested. On a real Systemcore, look for the same names in your dashboard's NetworkTables tree, and expect them to differ if you use a custom telemetry backend.
 
 ## Simulation is separate
 

@@ -30,6 +30,12 @@ library/java-2027/frc/robot/vision/EagleEyeCamera.java
 library/java-2027/frc/robot/vision/EagleEyeCameraSim.java  # optional, for simulation
 ```
 
+For alpha-7, install WPILib with the official installer before building the example. It installs to a `2027_alpha7` folder: `~/.wpilib/2027_alpha7` on macOS, `$XDG_DATA_HOME/wpilib/2027_alpha7` on Linux when `XDG_DATA_HOME` is an absolute path (otherwise `~/.local/share/wpilib/2027_alpha7`), and `C:\Users\Public\wpilib\2027_alpha7` on Windows. Only the macOS install was run in testing; the Linux and Windows folders come from WPILib's project template. The example's Gradle build looks there for the WPILib plugin. To build from a macOS terminal, set Java to the installer's JDK 25:
+
+```sh
+export JAVA_HOME="$HOME/.wpilib/2027_alpha7/jdk"
+```
+
 Alpha-7 uses `org.wpilib.*` imports, including `org.wpilib.math.linalg.Matrix` and `VecBuilder`, `org.wpilib.math.geometry.*`, and `org.wpilib.networktables.*`. Keep your existing drivetrain/estimator code on the matching WPILib API; do not combine the two SDK trees in one project. The `frc.robot.vision.EagleEyeCamera` import below is unchanged.
 
 Place the files under `src/main/java/frc/robot/vision/`, or change their `package` declarations to match your project. They only depend on WPILib. There is no vendordep.
@@ -178,6 +184,12 @@ for (var observation : eagleEyeCameras[0].poll()) {
 
 The SDK intentionally assigns heading a very large standard deviation by default,
 so a drivetrain with a trustworthy gyro primarily uses vision to correct translation.
+
+### Poll every robot loop
+
+Each camera keeps the 20 most recent pose samples and the 20 most recent metadata samples between polls. Call `update()` or `poll()` every robot loop (20 ms by default) so the queues stay nearly empty. At 90 frames per second, 20 samples cover about 220 ms. If robot code stalls longer than that, or more than 20 frames arrive in one burst, the oldest unread samples are dropped, and a pose that loses its matching metadata (or the reverse) is not accepted. The 2026 and alpha-7 SDKs both work this way, so the alpha-7 move did not introduce the limit.
+
+A five-minute desktop test **failed** its exact-count check. A 90 Hz publisher that caught up after delays sent bursts of 22 and 26 frames, and the SDK, polled every 3 ms, accepted 26,974 of 27,000 frames. A test subscriber with a large queue received every frame, but we did not trace each missing frame to the SDK queue. A separate 60-second test polled every 20 ms accepted all 4,420 frames, but its publisher never sent catch-up bursts and averaged about 74 frames per second rather than 90, so it does not show sustained 90 Hz delivery. The [alpha-7 report](https://github.com/Scythe-Engineering/EagleEye-Vision-System/blob/main/reports/wpilib-2027-alpha7/README.md#python-to-java-runtime-probes) has the details. If your logs show gaps, check for coprocessor stalls, network backlog, and robot loops that run long.
 
 ## Optional enhancement: poll vision every 5 ms
 
