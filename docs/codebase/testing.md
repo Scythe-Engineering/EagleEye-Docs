@@ -20,6 +20,32 @@ uv run pytest tests/ -v
 uv run pytest tests/ -m "not hardware_skip"
 ```
 
+## WPILib version matrix
+
+The default dependency groups keep 2026 selected. CI also runs the full pytest suite against exact alpha-7 bindings on Ubuntu 24.04 (glibc 2.39), using a cache per variant:
+
+```bash
+# 2026
+uv sync --locked --no-build
+uv run --no-sync pytest
+
+# 2027 alpha-7, on a platform with compatible wheels
+uv sync --locked --no-build --no-group wpilib2026 --group wpilib2027-alpha7
+uv run --no-sync pytest
+```
+
+The `--no-sync` run preserves the selected environment. A plain `uv run` may restore the default 2026 group. To avoid `--no-sync`, pass `--no-group wpilib2026 --group wpilib2027-alpha7` on every `uv run`.
+
+Compatibility tests use the **real installed ntcore bindings**. They check clock scale, capture-to-NT offset agreement, loopback publication with equal pose and metadata timestamps and duplicate frames, pipeline disable commands, connection and topic monitoring, and reading robot values. Adapter guards cover unsupported or mixed NT/math versions. Fakes remain useful for isolated flow tests but cannot prove native method names, timestamp scale, or transport interoperability.
+
+Java CI builds both `library/examples/localization-sim` with JDK 17 and `library/examples/localization-sim-2027` with JDK 25. Run the matching example's `./gradlew test build`. The alpha suite covers timestamp age/future rejection, default timer alignment, warning throttling, and simulator optional bearings as well as the localization contract. SDK parity is checked with:
+
+```bash
+python3 library/tools/check_java_sdk_parity.py
+```
+
+Loopback/native tests are desktop evidence. Physical controller deployment, cameras, radio/network load, and Driver Station/dashboard GUI operation require separate hardware validation; CI does not establish field readiness.
+
 ## conftest.py — hardware stubs
 
 `tests/conftest.py` injects stub modules for hardware dependencies that are not present in CI or dev environments:

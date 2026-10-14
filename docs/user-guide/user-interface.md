@@ -296,7 +296,7 @@ snapshots; these are not live streams. See [Rename a camera later](./cameras#ren
 
 | Control | Description |
 |---------|-------------|
-| **Roborio (or sim) IP Address** | roboRIO or simulation host address. A fresh install uses `localhost`; replace it. See [Connect NetworkTables](./networktables) |
+| **Robot controller (roboRIO/Systemcore) or simulation IP Address** | Address of the roboRIO, Systemcore, or simulation host. A fresh install uses `localhost`; replace it. See [Connect NetworkTables](./networktables) and [Use EagleEye with Systemcore](./systemcore) |
 | **Status indicator** | Current NetworkTables connection state; reads `Unknown` before the first connection |
 
 ### Views

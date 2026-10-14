@@ -7,22 +7,46 @@ title: Add EagleEye to robot code
 
 EagleEye publishes timestamped robot poses and quality measurements. The robot library joins the two NetworkTables topics, filters weak observations, and sends accepted poses to a WPILib pose estimator.
 
-## Copy the library
+## Choose the WPILib version and copy the library
 
-Copy these files from the EagleEye repository into your robot project:
+Use the SDK source tree matching the robot project's WPILib version. The public EagleEye camera API and topic contracts are the same in both versions.
+
+| Robot project | SDK source directory | Runnable example | Toolchain |
+| --- | --- | --- | --- |
+| WPILib 2026 | `library/java/` | `library/examples/localization-sim/` | Java 17 / GradleRIO 2026 |
+| WPILib 2027 alpha-7 | `library/java-2027/` | `library/examples/localization-sim-2027/` | Java 25 / `org.wpilib.GradleRIO` 2027.0.0-alpha-7 / Gradle 9.4.1 |
+
+Copy these files for **WPILib 2026**:
 
 ```text
 library/java/frc/robot/vision/EagleEyeCamera.java
 library/java/frc/robot/vision/EagleEyeCameraSim.java  # optional, for simulation
 ```
 
-Place them under `src/main/java/frc/robot/vision/`, or change their `package` declarations to match your project. They only depend on WPILib. There is no vendordep.
+For **WPILib 2027 alpha-7**, copy these instead:
+
+```text
+library/java-2027/frc/robot/vision/EagleEyeCamera.java
+library/java-2027/frc/robot/vision/EagleEyeCameraSim.java  # optional, for simulation
+```
+
+For alpha-7, install WPILib with the official installer before building the example. It installs to a `2027_alpha7` folder: `~/.wpilib/2027_alpha7` on macOS, `$XDG_DATA_HOME/wpilib/2027_alpha7` on Linux when `XDG_DATA_HOME` is an absolute path (otherwise `~/.local/share/wpilib/2027_alpha7`), and `C:\Users\Public\wpilib\2027_alpha7` on Windows. Only the macOS install was run in testing; the Linux and Windows folders come from WPILib's project template. The example's Gradle build looks there for the WPILib plugin. To build from a macOS terminal, set Java to the installer's JDK 25:
+
+```sh
+export JAVA_HOME="$HOME/.wpilib/2027_alpha7/jdk"
+```
+
+Alpha-7 uses `org.wpilib.*` imports, including `org.wpilib.math.linalg.Matrix` and `VecBuilder`, `org.wpilib.math.geometry.*`, and `org.wpilib.networktables.*`. Keep your existing drivetrain/estimator code on the matching WPILib API; do not combine the two SDK trees in one project. The `frc.robot.vision.EagleEyeCamera` import below is unchanged.
+
+Place the files under `src/main/java/frc/robot/vision/`, or change their `package` declarations to match your project. They only depend on WPILib. There is no vendordep.
+
+The default 2026 Python coprocessor communicates with alpha-7 Java robots over NT4. Changing the robot SDK does not require upgrading the coprocessor. See [installation variants](./install#wpilib-coprocessor-variants) before opting into alpha Python. For the controller image, Driver Station, team number, and address setup that an alpha-7 robot needs, see [Use EagleEye with Systemcore](./systemcore).
 
 ## Configure EagleEye and find your source keys
 
 On a fresh installation, complete the [camera setup wizard](./open-the-ui#2-complete-first-time-camera-setup).
 Name each camera by placement, calibrate it, enter its mounting extrinsics, and select
-**Localize** or **Both**. Enter the roboRIO address, or the reachable simulation host address,
+**Localize** or **Both**. Enter the robot controller address, or the reachable simulation host address,
 at the NetworkTables step. The wizard generates one pipeline per configured camera and
 restarts EagleEye. Verify the field map and robot pose before using the measurements.
 
@@ -95,6 +119,8 @@ vision origin when alliance changes unless every estimator input uses that same 
 
 ## Add it to Drive.java
 
+These snippets show only the EagleEye calls. They apply to both SDKs, but the WPILib types in your own code (gyro, estimator, `SubsystemBase`) use the package names of your WPILib version. For a complete alpha-7 file, see the [alpha-7 example's `Robot.java`](https://github.com/Scythe-Engineering/EagleEye-Vision-System/blob/main/library/examples/localization-sim-2027/src/main/java/frc/robot/Robot.java).
+
 Add the import and camera field to the subsystem that owns your pose estimator:
 
 ```java
@@ -158,6 +184,12 @@ for (var observation : eagleEyeCameras[0].poll()) {
 
 The SDK intentionally assigns heading a very large standard deviation by default,
 so a drivetrain with a trustworthy gyro primarily uses vision to correct translation.
+
+### Poll every robot loop
+
+Each camera keeps the 20 most recent pose samples and the 20 most recent metadata samples between polls. Call `update()` or `poll()` every robot loop (20 ms by default) so the queues stay nearly empty. At 90 frames per second, 20 samples cover about 220 ms. If robot code stalls longer than that, or more than 20 frames arrive in one burst, the oldest unread samples are dropped, and a pose that loses its matching metadata (or the reverse) is not accepted. The 2026 and alpha-7 SDKs both work this way, so the alpha-7 move did not introduce the limit.
+
+A five-minute desktop test **failed** its exact-count check. A 90 Hz publisher that caught up after delays sent bursts of 22 and 26 frames, and the SDK, polled every 3 ms, accepted 26,974 of 27,000 frames. A test subscriber with a large queue received every frame, but we did not trace each missing frame to the SDK queue. A separate 60-second test polled every 20 ms accepted all 4,420 frames, but its publisher never sent catch-up bursts and averaged about 74 frames per second rather than 90, so it does not show sustained 90 Hz delivery. The [alpha-7 report](https://github.com/Scythe-Engineering/EagleEye-Vision-System/blob/main/reports/wpilib-2027-alpha7/README.md#python-to-java-runtime-probes) has the details. If your logs show gaps, check for coprocessor stalls, network backlog, and robot loops that run long.
 
 ## Optional enhancement: poll vision every 5 ms
 
@@ -231,9 +263,16 @@ To return to 20 ms updates, remove the `addPeriodic` call and call
 
 ## Why you do not subtract latency
 
-EagleEye carries the source-frame timestamp through the pipeline and publishes it with the pose. NetworkTables converts the coprocessor timestamp into the roboRIO server clock, which is the FPGA-time domain expected by `addVisionMeasurement`.
+EagleEye carries the source-frame timestamp through the pipeline and publishes it with the pose. NetworkTables synchronizes the coprocessor timestamp to the robot server clock.
 
-`EagleEyeCamera` therefore passes `sample.timestamp / 1e6` directly to WPILib. Do not replace it with `Timer.getFPGATimestamp()` and do not subtract processing or network latency again.
+| Robot SDK | Native NT timestamp unit | Conversion to estimator seconds | Default robot clock |
+| --- | --- | --- | --- |
+| WPILib 2026 | Microseconds | `sample.timestamp / 1e6` | FPGA time / `Timer.getFPGATimestamp()` |
+| WPILib 2027 alpha-7 | Nanoseconds | `sample.timestamp / 1e9` | NT/robot monotonic time / `Timer.getTimestamp()` |
+
+The matching SDK performs this conversion. Do not replace capture time with the current timer value or subtract processing/network latency again. NT4 wire timestamps remain microseconds; the alpha-7 Java API exposes nanoseconds.
+
+For alpha-7, this direct conversion assumes the default `RobotController` time source. If your robot calls `RobotController.setTimeSource`, ensure the estimator uses the NT monotonic time base or explicitly translate timestamps to your custom source. In desktop alpha-7 simulation, NT follows simulated time and pauses/steps with simulation.
 
 A V4L2 source reports exposure time when the driver marks its buffer as monotonic and start-of-exposure. Other drivers, OpenCV sources, and video files fall back to frame-delivery time.
 
@@ -258,6 +297,8 @@ in capture order. Publishers retain identical values at new timestamps, so a sta
 robot still receives new measurements.
 
 ## Simulation
+
+### WPILib 2026
 
 For a complete runnable project with contract tests, open
 [`library/examples/localization-sim`](https://github.com/Scythe-Engineering/EagleEye-Vision-System/tree/main/library/examples/localization-sim).
@@ -294,6 +335,34 @@ public void simulationInit() {
 }
 ```
 
+### WPILib 2027 alpha-7
+
+Open [`library/examples/localization-sim-2027`](https://github.com/Scythe-Engineering/EagleEye-Vision-System/tree/main/library/examples/localization-sim-2027) with the alpha-7 tooling and Java 25. Run `./gradlew test build`, then simulate the project. The example uses `org.wpilib.framework.TimedRobot`, `org.wpilib.system.Timer.getTimestamp()`, and `org.wpilib.telemetry.Telemetry.log`.
+
+With RobotBase's default telemetry backend, display `Telemetry/EagleEye` in AdvantageScope, including `GroundTruth`, and `Telemetry/EagleEye/Accepted`. These replace the 2026 example's `SmartDashboard/EagleEye` and accepted-count path. A custom telemetry backend may route data differently.
+
+For an existing alpha-7 project, use the alpha simulator and field API:
+
+```java
+import org.wpilib.fields.Field;
+import org.wpilib.fields.Fields;
+import org.wpilib.math.geometry.Transform3d;
+import frc.robot.vision.EagleEyeCameraSim;
+
+private EagleEyeCameraSim frontCameraSim;
+
+@Override
+public void simulationInit() {
+  frontCameraSim = new EagleEyeCameraSim(
+      "localization/front", new Transform3d(),
+      Field.loadField(Fields.DEFAULT_FIELD));
+}
+```
+
+The alpha SDK reads each tag through `getPose()` and handles the optional bearing from `Translation2d.getAngle()`; a tag at the camera's position is skipped. Choose a field matching your actual map. An alpha API upgrade does not provide a future game's field assets.
+
+### Both versions
+
 Publish the drive simulation's ground-truth pose each simulation cycle:
 
 ```java
@@ -326,4 +395,6 @@ accepted-observation counter: a retained pose can remain visible after publishin
 | Topics exist but no observations are accepted | Check tag count, range, reprojection error, and timestamp age |
 | Estimate jumps toward vision | Raise `EagleEyeCamera.translationStdDevBase` or tighten quality limits |
 
-Desktop validation exercised exact live pose/metadata joins, Java X/Y/yaw preservation, and five independent remote heading/position fixtures. The runnable example includes the Java regression tests. A physical roboRIO round-trip has not yet been documented as field-verified, so test this integration on your robot before competition.
+Both SDKs warn through Driver Station when configured topics remain unresolved, with a five-second throttle. The 2026 SDK uses `DriverStation.reportWarning`; alpha-7 uses `org.wpilib.driverstation.DriverStationErrors.reportWarning`, which retains Driver Station delivery.
+
+Desktop loopback and contract tests exercise timestamp joins, pose preservation, and freshness. Physical roboRIO/Systemcore deployment, camera round-trips, and Driver Station/dashboard GUI operation are not field-verified by these tests. Validate on your robot before competition.

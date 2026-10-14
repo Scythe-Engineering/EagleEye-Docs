@@ -5,11 +5,11 @@ title: Prepare the Raspberry Pi
 
 # Prepare the Raspberry Pi
 
-EagleEye targets 64-bit Raspberry Pi OS Lite based on Debian 12. Use the prebuilt EagleEye image when a current image artifact is available. Use the stock-image path when you need a clean upstream OS or cannot download the artifact.
+EagleEye defaults to the WPILib 2026 coprocessor stack. The tested stock-image platform is 64-bit Raspberry Pi OS Lite based on Debian 12 (Bookworm). This stack also communicates with WPILib 2027 alpha-7 robots over NT4. Use the prebuilt EagleEye image when a current image artifact is available. Use the stock-image path when you need a clean upstream OS or cannot download the artifact.
 
 ## Option A: flash the EagleEye image
 
-The **Build Raspberry Pi image** GitHub Actions workflow produces an `eagleeye-pi-image` artifact containing an `.img.xz` file on tagged builds and manual releases.
+The **Build Raspberry Pi image** GitHub Actions workflow produces an `eagleeye-pi-image` artifact containing an `.img.xz` file on tagged builds and manual releases. The build downloads the latest upstream 64-bit Lite image, so its base OS is not guaranteed to be Debian 12. Inspect the accompanying `.build-metadata.json` for the actual base OS and glibc version. The dependency variant remains 2026.
 
 1. Open the [Build Raspberry Pi image workflow](https://github.com/Scythe-Engineering/EagleEye-Vision-System/actions/workflows/pi-image.yml).
 2. Open the newest successful tagged run.
@@ -59,6 +59,17 @@ sudo reboot
 ```
 
 Then continue to [Install EagleEye](./install).
+
+## Optional alpha-7 coprocessor platform
+
+The prebuilt image keeps the 2026 dependency variant. Installing alpha-7 Python is a separate opt-in and requires **glibc ≥ 2.39**. A 64-bit Raspberry Pi OS Trixie / Debian 13 platform meets that wheel requirement; use the [alpha installer argument](./install#wpilib-coprocessor-variants). Debian 12 Bookworm has glibc 2.36 and cannot install the alpha wheels; keep the default 2026 stack there. Wheel/platform compatibility does not establish a tested physical Trixie installation.
+
+Check the running host rather than relying only on an image filename:
+
+```bash
+cat /etc/os-release
+getconf GNU_LIBC_VERSION
+```
 
 ## Keep camera connections consistent
 

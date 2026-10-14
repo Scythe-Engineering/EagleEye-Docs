@@ -33,6 +33,8 @@ to robot-code integration. The individual guides below also cover manual setup a
 10. [Add temporal acceleration](./temporal-acceleration) if the basic pipeline needs more throughput.
 11. [Verify and tune](./verify-and-tune).
 
+If your robot uses a WPILib 2027 alpha-7 Systemcore controller, read [Use EagleEye with Systemcore](./systemcore) alongside steps 7 and 9. EagleEye still runs on the separate coprocessor.
+
 ## WebUI tabs
 
 | Tab | Use |

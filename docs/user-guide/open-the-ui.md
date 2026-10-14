@@ -43,7 +43,7 @@ The navigation sidebar on the right lists Views, 3D View, Pipeline, System, Sett
    estimation, choose Localize or Both. Detect-only requires a compatible CPU model;
    Both can leave its detection model slot empty until a model is available.
 6. Save the camera setup, then use **Add another camera** to repeat for the remaining cameras.
-7. Continue to NetworkTables, enter the roboRIO or simulation host address in Settings,
+7. Continue to NetworkTables, enter the robot controller (roboRIO/Systemcore) or simulation host address in Settings,
    and use the guide's **Continue** button to generate pipelines and restart EagleEye.
 8. Verify the result for the purpose you chose:
    - For **Localize** or **Both**, in 3D View check the active pipeline and confirm the robot

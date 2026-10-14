@@ -5,9 +5,9 @@ title: Connect NetworkTables
 
 # Connect NetworkTables
 
-EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a simulation host, is the server. Every pipeline publisher writes below the fixed `EagleEye` table.
+EagleEye joins NetworkTables as a client named `EagleEye`. The robot controller (roboRIO/Systemcore), or a simulation host, is the server. Every pipeline publisher writes below the fixed `EagleEye` table.
 
-## 1. Point EagleEye at the roboRIO
+## 1. Point EagleEye at the robot controller
 
 1. Open **Settings**.
 2. Under **Network Table**, enter the robot address.
@@ -15,6 +15,8 @@ EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a sim
 4. Restart the backend.
 
 ![Restart Backend and Reboot Computer controls in the Settings tab](/img/ui-screenshots/settings-restart-controls.png)
+
+### WPILib 2026 / roboRIO addresses
 
 | Address | Use |
 |---------|-----|
@@ -24,7 +26,15 @@ EagleEye joins NetworkTables as a client named `EagleEye`. The roboRIO, or a sim
 | `127.0.0.1` | Simulation server on the same computer |
 | Simulation host LAN or Tailscale IP | Simulation on another computer reachable from EagleEye |
 
-The status indicator beside the address should report a connection. If it does not, ping the roboRIO from the coprocessor and confirm robot code is running.
+### WPILib 2027 alpha-7 / Systemcore
+
+Enter an address that the **coprocessor** can reach in the same setting. The roboRIO hostname, radio, and USB addresses above do not apply to Systemcore. The USB and Wi-Fi access-point addresses in the official Systemcore documentation are reachable only over those links, so do not copy one into EagleEye unless the Pi is on that link. Read the Ethernet address from the Systemcore display and test it with `ping` from the Pi. [Use EagleEye with Systemcore](./systemcore#3-find-an-address-the-pi-can-reach) explains the options.
+
+WPILib **2027 alpha-7** requires Systemcore image **14** or later and the alpha-7 Driver Station. These requirements are specific to alpha-7. See the [alpha-7 release notes](https://github.com/wpilibsuite/allwpilib/releases/tag/v2027.0.0-alpha-7).
+
+A coprocessor running the default 2026 Python stack can connect to an alpha-7 robot over NT4. Use the alpha-7 Java SDK in the robot project.
+
+The status indicator beside the address should report a connection. If it does not, ping the controller from the coprocessor and confirm robot code is running.
 
 ## 2. Use the localization contract
 
@@ -85,6 +95,7 @@ Unsupported values pass to downstream pipeline nodes but are not published.
 | `EagleEye` table exists but keys do not | Pipeline state and Publish To NetworkTables nodes |
 | Pose freezes while stationary | Check direct Camera To Robot Pose publishing and duplicate retention; inspect timestamps rather than position changes |
 | Robot warns that a key is missing | Compare both Java constructor keys with publisher `target_key` values |
-| Works over USB but not radio | Replace `172.22.11.2` with the normal team address |
+| roboRIO works over USB but not radio | Replace `172.22.11.2` with the normal team address |
+| Systemcore address works from a laptop but not from the Pi | The laptop probably used a USB or Wi-Fi access-point link that the Pi is not on. Use an address the Pi can reach, as in [Use EagleEye with Systemcore](./systemcore) |
 
-Next: [Build an AprilTag Pipeline](./pipeline-setup), then [Add EagleEye to robot code](./robot-integration).
+Next: [Build an AprilTag Pipeline](./pipeline-setup), then [Add EagleEye to robot code](./robot-integration). For a Systemcore robot, also read [Use EagleEye with Systemcore](./systemcore).
